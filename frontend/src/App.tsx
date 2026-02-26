@@ -6,6 +6,7 @@ import { LoginPage } from './auth/LoginPage';
 import { CallbackPage } from './auth/CallbackPage';
 import { BandPage } from './features/band/BandPage';
 import { AlbumPage } from './features/album/AlbumPage';
+import { DashboardPage } from './features/band/DashboardPage';
 import { SearchBar } from './features/search/SearchBar';
 import { useAutoDetect } from './features/search/useAutoDetect';
 import { PlayerBar } from './player/PlayerBar';
@@ -50,9 +51,10 @@ function AppLayout() {
       </header>
       <main className="app-main">
         <Routes>
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/band/:maId" element={<BandPage />} />
           <Route path="/band/:maId/album/:albumId" element={<AlbumPage />} />
-          <Route path="*" element={<Navigate to="/band/125" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
       <PlayerBar />

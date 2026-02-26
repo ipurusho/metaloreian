@@ -34,7 +34,7 @@ export async function redirectToSpotifyAuth(): Promise<void> {
 
   sessionStorage.setItem('code_verifier', codeVerifier);
 
-  const redirectUri = `${window.location.origin}/callback`;
+  const redirectUri = 'http://127.0.0.1:5173/callback';
 
   const params = new URLSearchParams({
     response_type: 'code',

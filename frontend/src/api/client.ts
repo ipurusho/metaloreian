@@ -97,26 +97,53 @@ export function getAlbum(albumId: number): Promise<AlbumFull> {
   return fetchJSON(`${API_BASE}/albums/${albumId}`);
 }
 
-// Spotify token exchange
+// Spotify token exchange — direct to Spotify (no backend proxy needed)
 
-export function exchangeSpotifyToken(code: string, codeVerifier: string, redirectUri: string) {
-  return fetchJSON<{ access_token: string; refresh_token: string; expires_in: number }>(
-    `${API_BASE}/spotify/exchange`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: redirectUri }),
-    }
-  );
+const SPOTIFY_CLIENT_ID = '37a4b40e4fa24e5caa7f219f32899689';
+const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
+
+export async function exchangeSpotifyToken(code: string, codeVerifier: string, redirectUri: string) {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: redirectUri,
+    client_id: SPOTIFY_CLIENT_ID,
+    code_verifier: codeVerifier,
+  });
+
+  const res = await fetch(SPOTIFY_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error_description || err.error || `HTTP ${res.status}`);
+  }
+
+  return res.json() as Promise<{ access_token: string; refresh_token: string; expires_in: number }>;
 }
 
-export function refreshSpotifyToken(refreshToken: string) {
-  return fetchJSON<{ access_token: string; refresh_token?: string; expires_in: number }>(
-    `${API_BASE}/spotify/refresh`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    }
-  );
+export async function refreshSpotifyToken(refreshToken: string) {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: SPOTIFY_CLIENT_ID,
+  });
+
+  const res = await fetch(SPOTIFY_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error_description || err.error || `HTTP ${res.status}`);
+  }
+
+  return res.json() as Promise<{ access_token: string; refresh_token?: string; expires_in: number }>;
 }
 
 // Spotify Web API helpers

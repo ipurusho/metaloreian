@@ -1,12 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { searchBands } from '../../api/client';
+import { spotifySearch, spotifyPlay, searchBands } from '../../api/client';
+import { useAuth } from '../../auth/AuthProvider';
+import { usePlayer } from '../../player/PlayerContext';
+
+interface SpotifyArtist {
+  id: string;
+  name: string;
+  genres: string[];
+  uri: string;
+  images: { url: string }[];
+}
 
 export function SearchBar() {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const { accessToken } = useAuth();
+  const { deviceId } = usePlayer();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -28,15 +40,36 @@ export function SearchBar() {
   }, []);
 
   const { data: results } = useQuery({
-    queryKey: ['search', debouncedQuery],
-    queryFn: () => searchBands(debouncedQuery),
-    enabled: debouncedQuery.length >= 2,
+    queryKey: ['spotify-search', debouncedQuery],
+    queryFn: async () => {
+      if (!accessToken) return [];
+      const res = await spotifySearch(debouncedQuery, 'artist', accessToken);
+      return (res.artists?.items || []) as SpotifyArtist[];
+    },
+    enabled: debouncedQuery.length >= 2 && !!accessToken,
   });
 
-  const handleSelect = (maId: number) => {
+  const handleSelect = async (artist: SpotifyArtist) => {
     setQuery('');
     setIsOpen(false);
-    navigate(`/band/${maId}`);
+
+    // Start playback
+    if (accessToken && deviceId) {
+      spotifyPlay(accessToken, { context_uri: artist.uri }).catch(() => {});
+    }
+
+    // Search MA for the band and navigate to its page
+    searchBands(artist.name)
+      .then((maResults) => {
+        if (maResults && maResults.length > 0) {
+          const exact = maResults.find(
+            (r) => r.name.toLowerCase() === artist.name.toLowerCase()
+          );
+          const match = exact || maResults[0];
+          navigate(`/band/${match.ma_id}`);
+        }
+      })
+      .catch(() => {});
   };
 
   return (
@@ -44,7 +77,7 @@ export function SearchBar() {
       <input
         className="search-input"
         type="text"
-        placeholder="Search bands..."
+        placeholder="Search artists..."
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -54,15 +87,15 @@ export function SearchBar() {
       />
       {isOpen && results && results.length > 0 && (
         <div className="search-results">
-          {results.map((band) => (
+          {results.map((artist) => (
             <button
-              key={band.ma_id}
+              key={artist.id}
               className="search-result-item"
-              onClick={() => handleSelect(band.ma_id)}
+              onClick={() => handleSelect(artist)}
             >
-              <span className="search-result-name">{band.name}</span>
+              <span className="search-result-name">{artist.name}</span>
               <span className="search-result-meta">
-                {band.genre} | {band.country}
+                {artist.genres.slice(0, 3).join(', ') || 'No genres listed'}
               </span>
             </button>
           ))}

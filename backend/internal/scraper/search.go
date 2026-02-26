@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -26,19 +25,13 @@ func (c *Client) SearchBands(ctx context.Context, query string) ([]models.BandSe
 	u := fmt.Sprintf("%s/search/ajax-band-search/?field=name&query=%s&sEcho=1&iDisplayStart=0&iDisplayLength=50",
 		baseURL, url.QueryEscape(query))
 
-	resp, err := c.fetch(ctx, u)
+	body, err := c.fetchJSON(ctx, u)
 	if err != nil {
 		return nil, fmt.Errorf("search request: %w", err)
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
-	}
 
 	var sr maSearchResponse
-	if err := json.Unmarshal(body, &sr); err != nil {
+	if err := json.Unmarshal([]byte(body), &sr); err != nil {
 		return nil, fmt.Errorf("parse search response: %w", err)
 	}
 

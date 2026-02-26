@@ -8,13 +8,60 @@ function formatTime(ms: number): string {
 }
 
 export function PlayerBar() {
-  const { currentTrack, isPlaying, position, duration, togglePlay, nextTrack, prevTrack, seek } =
-    usePlayer();
+  const {
+    sdkStatus,
+    sdkError,
+    deviceId,
+    currentTrack,
+    isPlaying,
+    position,
+    duration,
+    togglePlay,
+    nextTrack,
+    prevTrack,
+    seek,
+    transferPlayback,
+  } = usePlayer();
+
+  if (sdkStatus === 'error') {
+    return (
+      <div className="player-bar">
+        <div className="player-empty" style={{ color: 'var(--accent)' }}>
+          Player error: {sdkError} (Spotify Premium required)
+        </div>
+      </div>
+    );
+  }
+
+  if (sdkStatus === 'loading' || !deviceId) {
+    return (
+      <div className="player-bar">
+        <div className="player-empty">Connecting to Spotify...</div>
+      </div>
+    );
+  }
 
   if (!currentTrack) {
     return (
       <div className="player-bar">
-        <div className="player-empty">No track playing — play something on Spotify</div>
+        <div className="player-empty">
+          Player ready.{' '}
+          <button
+            onClick={transferPlayback}
+            style={{
+              background: '#1db954',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '6px 16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginLeft: '8px',
+            }}
+          >
+            Start Playback
+          </button>
+        </div>
       </div>
     );
   }

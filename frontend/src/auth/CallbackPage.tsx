@@ -30,13 +30,13 @@ export function CallbackPage() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/callback`;
+    const redirectUri = 'http://127.0.0.1:5173/callback';
 
     exchangeSpotifyToken(code, codeVerifier, redirectUri)
       .then((data) => {
         clearCodeVerifier();
         login(data.access_token, data.refresh_token, data.expires_in);
-        navigate('/band/125', { replace: true }); // Default to Iron Maiden
+        navigate('/dashboard', { replace: true });
       })
       .catch((err) => {
         setError(`Token exchange failed: ${err.message}`);
