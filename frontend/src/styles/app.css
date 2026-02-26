@@ -1,0 +1,644 @@
+/* Login Page */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.login-card {
+  text-align: center;
+  padding: 48px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 420px;
+  width: 100%;
+}
+
+.login-title {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.login-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.login-button {
+  display: inline-block;
+  padding: 12px 32px;
+  background: #1db954;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.login-button:hover {
+  background: #1ed760;
+}
+
+.login-note {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 16px;
+}
+
+/* Search */
+.search-container {
+  position: relative;
+  flex: 0 1 360px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.search-result-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.search-result-item:hover {
+  background: var(--bg-hover);
+}
+
+.search-result-name {
+  font-weight: 600;
+}
+
+.search-result-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Header */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.auto-detect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.auto-detect-toggle input {
+  accent-color: var(--accent);
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Band Page */
+.band-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.band-header {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.band-photo {
+  flex-shrink: 0;
+  width: 250px;
+}
+
+.band-photo img {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.band-info {
+  flex: 1;
+}
+
+.band-name {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.band-logo {
+  max-width: 200px;
+  max-height: 60px;
+  margin-bottom: 16px;
+  filter: invert(0.8);
+}
+
+.band-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  color: var(--text-secondary);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  color: var(--success);
+}
+
+.status-split-up, .status-on-hold, .status-changed-name {
+  color: var(--warning);
+}
+
+.play-button {
+  padding: 10px 24px;
+  background: #1db954;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.play-button:hover:not(:disabled) {
+  background: #1ed760;
+}
+
+.play-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Band Content */
+.band-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Discography */
+.discography-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.discography-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+
+.discography-item:hover {
+  background: var(--bg-hover);
+}
+
+.album-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.album-type {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+}
+
+.album-year {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* Lineup */
+.lineup-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.member-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.member-name {
+  font-weight: 600;
+}
+
+.member-instrument {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.member-other-bands {
+  margin-top: 4px;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.other-bands-label {
+  color: var(--text-muted);
+}
+
+.other-band-link {
+  color: var(--text-secondary);
+}
+
+.other-band-link:hover {
+  color: var(--accent-hover);
+}
+
+.band-link {
+  color: var(--text-secondary);
+}
+
+.band-link:hover {
+  color: var(--accent-hover);
+}
+
+/* Album Page */
+.album-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.album-nav {
+  margin-bottom: 16px;
+}
+
+.back-link {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+.album-header {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.album-cover {
+  flex-shrink: 0;
+  width: 250px;
+}
+
+.album-cover img {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.album-info {
+  flex: 1;
+}
+
+.album-info .album-name {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.album-band-name {
+  font-size: 18px;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.album-band-name:hover {
+  color: var(--text-primary);
+}
+
+.album-stats {
+  margin-bottom: 16px;
+}
+
+.album-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* Tracklist */
+.track-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.track-table thead th {
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.track-row td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.track-num {
+  width: 32px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.track-title {
+  color: var(--text-primary);
+}
+
+.track-duration {
+  width: 60px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: right;
+}
+
+/* Player Bar */
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--player-bg);
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  height: 80px;
+}
+
+.player-empty {
+  color: var(--text-muted);
+  width: 100%;
+  text-align: center;
+}
+
+.player-track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 240px;
+}
+
+.player-album-art {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius);
+}
+
+.player-text {
+  min-width: 0;
+}
+
+.player-track-name {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-artist-name {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.player-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 16px;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.player-btn:hover {
+  color: var(--text-primary);
+}
+
+.player-btn-play {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.player-btn-play:hover {
+  border-color: var(--text-primary);
+}
+
+.player-progress-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.player-time {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  min-width: 36px;
+  text-align: center;
+}
+
+.player-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--player-progress-bg);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.player-progress-fill {
+  height: 100%;
+  background: var(--player-progress);
+  border-radius: 2px;
+  transition: width 0.5s linear;
+}
+
+.player-progress-bar:hover .player-progress-fill {
+  background: var(--accent-hover);
+}
+
+/* Empty states */
+.empty-state {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 16px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .band-header {
+    flex-direction: column;
+  }
+
+  .band-photo {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .band-content {
+    grid-template-columns: 1fr;
+  }
+
+  .album-header {
+    flex-direction: column;
+  }
+
+  .album-cover {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .album-content {
+    grid-template-columns: 1fr;
+  }
+
+  .app-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .search-container {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .player-bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+
+  .player-track-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .player-progress-section {
+    flex-basis: 100%;
+    order: 3;
+  }
+}
