@@ -13,9 +13,13 @@ interface CurrentTrack {
   duration_ms: number;
 }
 
+type SDKStatus = 'loading' | 'ready' | 'error';
+
 interface PlayerContextType {
   player: Spotify.Player | null;
   deviceId: string | null;
+  sdkStatus: SDKStatus;
+  sdkError: string | null;
   currentTrack: CurrentTrack | null;
   isPlaying: boolean;
   position: number;
@@ -24,6 +28,7 @@ interface PlayerContextType {
   nextTrack: () => void;
   prevTrack: () => void;
   seek: (positionMs: number) => void;
+  transferPlayback: () => Promise<void>;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -42,8 +47,13 @@ declare global {
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const { accessToken } = useAuth();
+  const tokenRef = useRef(accessToken);
+  tokenRef.current = accessToken;
+
   const [player, setPlayer] = useState<Spotify.Player | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [sdkStatus, setSdkStatus] = useState<SDKStatus>('loading');
+  const [sdkError, setSdkError] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -67,18 +77,60 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     let p: Spotify.Player | null = null;
 
     const init = () => {
+      setSdkStatus('loading');
+      setSdkError(null);
+
       p = new Spotify.Player({
         name: 'Metaloreian',
-        getOAuthToken: (cb) => cb(accessToken),
+        getOAuthToken: (cb) => cb(tokenRef.current!),
         volume: 0.5,
       });
 
       p.addListener('ready', ({ device_id }) => {
+        import.meta.env.DEV && console.log('[Metaloreian] SDK ready, device:', device_id);
         setDeviceId(device_id);
+        setSdkStatus('ready');
+
+        // Auto-transfer playback to this device
+        fetch('https://api.spotify.com/v1/me/player', {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${tokenRef.current}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ device_ids: [device_id], play: false }),
+        }).then((res) => {
+          if (res.ok) {
+            import.meta.env.DEV && console.log('[Metaloreian] Playback transferred');
+          } else {
+            import.meta.env.DEV && console.warn('[Metaloreian] Transfer failed:', res.status);
+          }
+        }).catch((err) => {
+          import.meta.env.DEV && console.warn('[Metaloreian] Transfer error:', err);
+        });
       });
 
-      p.addListener('not_ready', () => {
+      p.addListener('not_ready', ({ device_id }) => {
+        import.meta.env.DEV && console.warn('[Metaloreian] Device not ready:', device_id);
         setDeviceId(null);
+      });
+
+      p.addListener('initialization_error', ({ message }) => {
+        import.meta.env.DEV && console.error('[Metaloreian] Init error:', message);
+        setSdkStatus('error');
+        setSdkError(message);
+      });
+
+      p.addListener('authentication_error', ({ message }) => {
+        import.meta.env.DEV && console.error('[Metaloreian] Auth error:', message);
+        setSdkStatus('error');
+        setSdkError(message);
+      });
+
+      p.addListener('account_error', ({ message }) => {
+        import.meta.env.DEV && console.error('[Metaloreian] Account error:', message);
+        setSdkStatus('error');
+        setSdkError(message);
       });
 
       p.addListener('player_state_changed', (state) => {
@@ -105,7 +157,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         setDuration(state.duration);
       });
 
-      p.connect();
+      p.connect().then((success) => {
+        if (success) {
+          import.meta.env.DEV && console.log('[Metaloreian] Player connected');
+        } else {
+          import.meta.env.DEV && console.error('[Metaloreian] Player failed to connect');
+          setSdkStatus('error');
+          setSdkError('Failed to connect to Spotify');
+        }
+      });
+
       setPlayer(p);
     };
 
@@ -157,11 +218,25 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     [player]
   );
 
+  const transferPlayback = useCallback(async () => {
+    if (!deviceId || !tokenRef.current) return;
+    await fetch('https://api.spotify.com/v1/me/player', {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${tokenRef.current}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ device_ids: [deviceId], play: true }),
+    });
+  }, [deviceId]);
+
   return (
     <PlayerContext.Provider
       value={{
         player,
         deviceId,
+        sdkStatus,
+        sdkError,
         currentTrack,
         isPlaying,
         position,
@@ -170,6 +245,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         nextTrack,
         prevTrack,
         seek,
+        transferPlayback,
       }}
     >
       {children}

@@ -25,7 +25,7 @@ func NewAlbumHandlers(s *store.Store, f AlbumFetcher) *AlbumHandlers {
 func (h *AlbumHandlers) Get(w http.ResponseWriter, r *http.Request) {
 	albumIDStr := chi.URLParam(r, "albumId")
 	albumID, err := strconv.ParseInt(albumIDStr, 10, 64)
-	if err != nil {
+	if err != nil || albumID <= 0 {
 		writeError(w, http.StatusBadRequest, "invalid album ID")
 		return
 	}

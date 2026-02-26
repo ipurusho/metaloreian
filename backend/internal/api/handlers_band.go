@@ -29,6 +29,10 @@ func (h *BandHandlers) Search(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "q parameter required")
 		return
 	}
+	if len(query) > 200 {
+		writeError(w, http.StatusBadRequest, "query too long (max 200 characters)")
+		return
+	}
 
 	results, err := h.fetcher.SearchBands(query)
 	if err != nil {
@@ -42,7 +46,7 @@ func (h *BandHandlers) Search(w http.ResponseWriter, r *http.Request) {
 func (h *BandHandlers) Get(w http.ResponseWriter, r *http.Request) {
 	maIDStr := chi.URLParam(r, "maId")
 	maID, err := strconv.ParseInt(maIDStr, 10, 64)
-	if err != nil {
+	if err != nil || maID <= 0 {
 		writeError(w, http.StatusBadRequest, "invalid band ID")
 		return
 	}

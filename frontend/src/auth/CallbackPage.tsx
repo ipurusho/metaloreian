@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 import { exchangeSpotifyToken } from '../api/client';
-import { getCodeVerifier, clearCodeVerifier } from './pkce';
+import { getCodeVerifier, clearCodeVerifier, getRedirectUri } from './pkce';
 
 export function CallbackPage() {
   const { login } = useAuth();
@@ -30,13 +30,11 @@ export function CallbackPage() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/callback`;
-
-    exchangeSpotifyToken(code, codeVerifier, redirectUri)
+    exchangeSpotifyToken(code, codeVerifier, getRedirectUri())
       .then((data) => {
         clearCodeVerifier();
         login(data.access_token, data.refresh_token, data.expires_in);
-        navigate('/band/125', { replace: true }); // Default to Iron Maiden
+        navigate('/dashboard', { replace: true });
       })
       .catch((err) => {
         setError(`Token exchange failed: ${err.message}`);

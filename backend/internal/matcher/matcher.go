@@ -15,6 +15,7 @@ import (
 
 // Matcher resolves Spotify artist names to Metal Archives band data.
 // It acts as the orchestrator between the cache (store) and the scraper.
+// Store may be nil for scrape-only mode (no database).
 type Matcher struct {
 	store   *store.Store
 	scraper *scraper.Client
@@ -27,10 +28,12 @@ func New(s *store.Store, sc *scraper.Client) *Matcher {
 
 // SearchBands searches MA for bands, returning results.
 func (m *Matcher) SearchBands(query string) ([]models.BandSearchResult, error) {
-	// First check local DB cache
-	cached, err := m.store.SearchBandsByName(query)
-	if err == nil && len(cached) > 0 {
-		return cached, nil
+	// Check local DB cache if available
+	if m.store != nil {
+		cached, err := m.store.SearchBandsByName(query)
+		if err == nil && len(cached) > 0 {
+			return cached, nil
+		}
 	}
 
 	// Fall through to MA search
@@ -55,31 +58,25 @@ func (m *Matcher) FetchBand(maID int64) (*models.BandFull, error) {
 }
 
 func (m *Matcher) fetchBandInner(maID int64) (*models.BandFull, error) {
-	// Check cache
-	cached, err := m.store.GetBand(maID)
-	if err != nil {
-		return nil, err
-	}
-
-	if cached != nil && m.store.IsBandFresh(cached) {
-		// Serve from cache
-		return m.assembleBandFromCache(cached)
+	// Check cache if store is available
+	if m.store != nil {
+		cached, err := m.store.GetBand(maID)
+		if err == nil && cached != nil && m.store.IsBandFresh(cached) {
+			return m.assembleBandFromCache(cached)
+		}
 	}
 
 	// Scrape fresh data
 	full, err := m.scraper.ScrapeBandFull(context.Background(), maID)
 	if err != nil {
-		// If we have stale cache, serve it
-		if cached != nil {
-			log.Printf("scrape failed for band %d, serving stale cache: %v", maID, err)
-			return m.assembleBandFromCache(cached)
-		}
 		return nil, fmt.Errorf("scrape band %d: %w", maID, err)
 	}
 
-	// Persist to cache
-	if err := m.persistBand(full); err != nil {
-		log.Printf("failed to cache band %d: %v", maID, err)
+	// Persist to cache if store is available
+	if m.store != nil {
+		if err := m.persistBand(full); err != nil {
+			log.Printf("failed to cache band %d: %v", maID, err)
+		}
 	}
 
 	return full, nil
@@ -118,16 +115,6 @@ func (m *Matcher) persistBand(full *models.BandFull) error {
 		}
 
 		lineupType := "current"
-		if member.LineupType != "" {
-			lineupType = member.LineupType
-		}
-		// Determine type from which list the member came from
-		for _, cm := range full.CurrentLineup {
-			if cm.MemberID == member.MemberID {
-				lineupType = "current"
-				break
-			}
-		}
 		for _, pm := range full.PastLineup {
 			if pm.MemberID == member.MemberID {
 				lineupType = "past"
@@ -169,29 +156,29 @@ func (m *Matcher) FetchAlbum(albumID int64) (*models.AlbumFull, error) {
 }
 
 func (m *Matcher) fetchAlbumInner(albumID int64) (*models.AlbumFull, error) {
-	// Check cache
-	cached, err := m.store.GetAlbum(albumID)
-	if err != nil {
-		return nil, err
-	}
-
-	if cached != nil && m.store.IsAlbumFresh(cached) {
-		return m.assembleAlbumFromCache(cached)
+	// Check cache if store is available — but only if it has tracks
+	// (albums stored from discography scrape won't have tracks)
+	if m.store != nil {
+		cached, err := m.store.GetAlbum(albumID)
+		if err == nil && cached != nil && m.store.IsAlbumFresh(cached) {
+			tracks, _ := m.store.GetAlbumTracks(albumID)
+			if len(tracks) > 0 {
+				return m.assembleAlbumFromCache(cached)
+			}
+		}
 	}
 
 	// Scrape fresh
 	full, err := m.scraper.ScrapeAlbum(context.Background(), albumID)
 	if err != nil {
-		if cached != nil {
-			log.Printf("scrape failed for album %d, serving stale cache: %v", albumID, err)
-			return m.assembleAlbumFromCache(cached)
-		}
 		return nil, fmt.Errorf("scrape album %d: %w", albumID, err)
 	}
 
-	// Persist
-	if err := m.persistAlbum(full); err != nil {
-		log.Printf("failed to cache album %d: %v", albumID, err)
+	// Persist if store available
+	if m.store != nil {
+		if err := m.persistAlbum(full); err != nil {
+			log.Printf("failed to cache album %d: %v", albumID, err)
+		}
 	}
 
 	return full, nil
@@ -200,7 +187,6 @@ func (m *Matcher) fetchAlbumInner(albumID int64) (*models.AlbumFull, error) {
 func (m *Matcher) assembleAlbumFromCache(album *models.Album) (*models.AlbumFull, error) {
 	full := &models.AlbumFull{Album: *album}
 
-	// Get band name
 	band, err := m.store.GetBand(album.BandID)
 	if err == nil && band != nil {
 		full.BandName = band.Name
@@ -250,7 +236,6 @@ func NormalizeName(name string) string {
 	name = strings.ToLower(strings.TrimSpace(name))
 	name = strings.TrimPrefix(name, "the ")
 
-	// Remove diacritics and non-alphanumeric
 	var b strings.Builder
 	for _, r := range name {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == ' ' {

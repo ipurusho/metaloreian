@@ -33,8 +33,8 @@ func (c *Client) ScrapeAlbum(ctx context.Context, albumID int64) (*models.AlbumF
 		}
 	}
 
-	// Cover art
-	if coverHref, exists := doc.Find(SelAlbumCover).Attr("href"); exists {
+	// Cover art — <a id="cover" href="...">
+	if coverHref, exists := doc.Find("a#cover").Attr("href"); exists {
 		album.CoverURL = coverHref
 	}
 
@@ -68,17 +68,37 @@ func (c *Client) ScrapeAlbum(ctx context.Context, albumID int64) (*models.AlbumF
 }
 
 // parseTracks extracts tracks from the tracklist table.
+// MA track rows have class "even" or "odd". Each row has 4 tds:
+// [0] track number (e.g. "1."), [1] title, [2] duration, [3] lyrics link
+// We skip "sideRow" (side markers) and "displayNone" (lyric text) rows.
 func parseTracks(doc *goquery.Document) []models.Track {
 	var tracks []models.Track
-	trackNum := 0
 
-	doc.Find(SelTracklist).Find(SelTrackRow).Each(func(_ int, row *goquery.Selection) {
+	doc.Find("table.table_lyrics tbody tr").Each(func(_ int, row *goquery.Selection) {
+		class, _ := row.Attr("class")
+
+		// Only process actual track rows (class "even" or "odd")
+		if !strings.Contains(class, "even") && !strings.Contains(class, "odd") {
+			return
+		}
+		// Skip lyric display rows
+		if strings.Contains(class, "displayNone") {
+			return
+		}
+
 		tds := row.Find("td")
 		if tds.Length() < 3 {
 			return
 		}
 
-		trackNum++
+		// Parse track number from first td text (e.g. "1." or "5.")
+		numText := strings.TrimSpace(tds.Eq(0).Text())
+		numText = strings.TrimSuffix(numText, ".")
+		trackNum, _ := strconv.Atoi(numText)
+		if trackNum == 0 {
+			return
+		}
+
 		track := models.Track{
 			TrackNumber: trackNum,
 			Title:       strings.TrimSpace(tds.Eq(1).Text()),

@@ -16,6 +16,7 @@ import (
 func NewRouter(cfg *config.Config, s *store.Store, bf BandFetcher, af AlbumFetcher) *chi.Mux {
 	r := chi.NewRouter()
 
+	r.Use(SecurityHeaders)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{cfg.FrontendURL},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
@@ -30,6 +31,7 @@ func NewRouter(cfg *config.Config, s *store.Store, bf BandFetcher, af AlbumFetch
 	albumH := NewAlbumHandlers(s, af)
 
 	r.Route("/api", func(r chi.Router) {
+		r.Use(RateLimitMiddleware(60)) // 60 requests/minute per IP
 		r.Get("/bands/search", bandH.Search)
 		r.Get("/bands/{maId}", bandH.Get)
 		r.Get("/albums/{albumId}", albumH.Get)

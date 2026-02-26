@@ -12,8 +12,8 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:            getEnv("PORT", "8080"),
-		DatabaseURL:     getEnv("DATABASE_URL", "postgres://metaloreian:metaloreian_dev@localhost:5432/metaloreian?sslmode=disable"),
-		SpotifyClientID: getEnv("SPOTIFY_CLIENT_ID", "37a4b40e4fa24e5caa7f219f32899689"),
+		DatabaseURL:     getEnv("DATABASE_URL", "postgres:///metaloreian?host=/tmp&sslmode=disable"),
+		SpotifyClientID: getEnv("SPOTIFY_CLIENT_ID", ""),
 		FrontendURL:     getEnv("FRONTEND_URL", "http://localhost:5173"),
 	}
 }

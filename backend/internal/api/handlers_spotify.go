@@ -28,7 +28,10 @@ type refreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+const maxBodySize = 4 * 1024 // 4KB — token requests are small
+
 func (h *SpotifyHandlers) Exchange(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	var req tokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -56,10 +59,11 @@ func (h *SpotifyHandlers) Exchange(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	io.Copy(w, io.LimitReader(resp.Body, 64*1024))
 }
 
 func (h *SpotifyHandlers) Refresh(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	var req refreshRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -85,5 +89,5 @@ func (h *SpotifyHandlers) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	io.Copy(w, io.LimitReader(resp.Body, 64*1024))
 }
