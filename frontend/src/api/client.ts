@@ -99,7 +99,7 @@ export function getAlbum(albumId: number): Promise<AlbumFull> {
 
 // Spotify token exchange — direct to Spotify (no backend proxy needed)
 
-const SPOTIFY_CLIENT_ID = '37a4b40e4fa24e5caa7f219f32899689';
+const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 
 export async function exchangeSpotifyToken(code: string, codeVerifier: string, redirectUri: string) {

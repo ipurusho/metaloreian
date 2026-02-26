@@ -1,4 +1,5 @@
-const SPOTIFY_CLIENT_ID = '37a4b40e4fa24e5caa7f219f32899689';
+const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || `${window.location.origin}/callback`;
 const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize';
 const SCOPES = [
   'streaming',
@@ -34,15 +35,13 @@ export async function redirectToSpotifyAuth(): Promise<void> {
 
   sessionStorage.setItem('code_verifier', codeVerifier);
 
-  const redirectUri = 'http://127.0.0.1:5173/callback';
-
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: SPOTIFY_CLIENT_ID,
     scope: SCOPES,
     code_challenge_method: 'S256',
     code_challenge: codeChallenge,
-    redirect_uri: redirectUri,
+    redirect_uri: SPOTIFY_REDIRECT_URI,
   });
 
   window.location.href = `${SPOTIFY_AUTH_URL}?${params.toString()}`;
@@ -54,4 +53,8 @@ export function getCodeVerifier(): string | null {
 
 export function clearCodeVerifier(): void {
   sessionStorage.removeItem('code_verifier');
+}
+
+export function getRedirectUri(): string {
+  return SPOTIFY_REDIRECT_URI;
 }

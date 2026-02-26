@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: metaloreian
       POSTGRES_USER: metaloreian
-      POSTGRES_PASSWORD: metaloreian_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-metaloreian_dev}
     ports:
       - "5432:5432"
     volumes:
@@ -23,9 +23,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: postgres://metaloreian:metaloreian_dev@postgres:5432/metaloreian?sslmode=disable
-      SPOTIFY_CLIENT_ID: "37a4b40e4fa24e5caa7f219f32899689"
-      FRONTEND_URL: "http://localhost:5173"
+      DATABASE_URL: postgres://metaloreian:${POSTGRES_PASSWORD:-metaloreian_dev}@postgres:5432/metaloreian?sslmode=disable
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?Set SPOTIFY_CLIENT_ID in .env}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       PORT: "8080"
     depends_on:
       postgres:

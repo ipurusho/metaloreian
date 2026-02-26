@@ -87,7 +87,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       });
 
       p.addListener('ready', ({ device_id }) => {
-        console.log('[Metaloreian] SDK ready, device:', device_id);
+        import.meta.env.DEV && console.log('[Metaloreian] SDK ready, device:', device_id);
         setDeviceId(device_id);
         setSdkStatus('ready');
 
@@ -101,34 +101,34 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ device_ids: [device_id], play: false }),
         }).then((res) => {
           if (res.ok) {
-            console.log('[Metaloreian] Playback transferred');
+            import.meta.env.DEV && console.log('[Metaloreian] Playback transferred');
           } else {
-            console.warn('[Metaloreian] Transfer failed:', res.status);
+            import.meta.env.DEV && console.warn('[Metaloreian] Transfer failed:', res.status);
           }
         }).catch((err) => {
-          console.warn('[Metaloreian] Transfer error:', err);
+          import.meta.env.DEV && console.warn('[Metaloreian] Transfer error:', err);
         });
       });
 
       p.addListener('not_ready', ({ device_id }) => {
-        console.warn('[Metaloreian] Device not ready:', device_id);
+        import.meta.env.DEV && console.warn('[Metaloreian] Device not ready:', device_id);
         setDeviceId(null);
       });
 
       p.addListener('initialization_error', ({ message }) => {
-        console.error('[Metaloreian] Init error:', message);
+        import.meta.env.DEV && console.error('[Metaloreian] Init error:', message);
         setSdkStatus('error');
         setSdkError(message);
       });
 
       p.addListener('authentication_error', ({ message }) => {
-        console.error('[Metaloreian] Auth error:', message);
+        import.meta.env.DEV && console.error('[Metaloreian] Auth error:', message);
         setSdkStatus('error');
         setSdkError(message);
       });
 
       p.addListener('account_error', ({ message }) => {
-        console.error('[Metaloreian] Account error:', message);
+        import.meta.env.DEV && console.error('[Metaloreian] Account error:', message);
         setSdkStatus('error');
         setSdkError(message);
       });
@@ -159,9 +159,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       p.connect().then((success) => {
         if (success) {
-          console.log('[Metaloreian] Player connected');
+          import.meta.env.DEV && console.log('[Metaloreian] Player connected');
         } else {
-          console.error('[Metaloreian] Player failed to connect');
+          import.meta.env.DEV && console.error('[Metaloreian] Player failed to connect');
           setSdkStatus('error');
           setSdkError('Failed to connect to Spotify');
         }
