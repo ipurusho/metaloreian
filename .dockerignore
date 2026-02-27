@@ -1,0 +1,9 @@
+.git
+frontend/node_modules
+frontend/dist
+backend/metaloreian
+*.md
+.env
+.env.*
+.vscode
+.idea
