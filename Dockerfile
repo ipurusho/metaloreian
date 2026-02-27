@@ -23,14 +23,18 @@ RUN apt-get update && \
         ca-certificates \
         fonts-liberation \
         wget && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    useradd -r -m -s /bin/false appuser
 
 ENV CHROME_PATH=/usr/bin/chromium
+ENV CHROMIUM_FLAGS="--no-sandbox"
 
 WORKDIR /app
 COPY --from=backend /app/metaloreian .
 COPY --from=frontend /app/frontend/dist ./dist
 COPY backend/migrations ./migrations
+RUN chown -R appuser:appuser /app
 
+USER appuser
 EXPOSE 8080
 CMD ["./metaloreian"]
