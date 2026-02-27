@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getBand, spotifySearch, spotifyPlay } from '../../api/client';
@@ -7,10 +8,13 @@ import { MemberRow } from '../../components/MemberRow';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { Link } from 'react-router-dom';
 
+const ALL_FILTER = 'All';
+
 export function BandPage() {
   const { maId } = useParams<{ maId: string }>();
   const { accessToken } = useAuth();
   const { deviceId } = usePlayer();
+  const [albumFilter, setAlbumFilter] = useState('Full-length');
 
   const { data: band, isLoading, error } = useQuery({
     queryKey: ['band', maId],
@@ -66,19 +70,36 @@ export function BandPage() {
         <div className="band-discography">
           <h2 className="section-title">Discography</h2>
           {band.discography && band.discography.length > 0 ? (
-            <div className="discography-list">
-              {band.discography.map((album) => (
-                <Link
-                  key={album.album_id}
-                  to={`/band/${band.ma_id}/album/${album.album_id}`}
-                  className="discography-item"
-                >
-                  <span className="album-name">{album.name}</span>
-                  <span className="album-type">{album.type}</span>
-                  <span className="album-year">{album.release_date}</span>
-                </Link>
-              ))}
-            </div>
+            <>
+              <DiscographyFilters
+                albums={band.discography}
+                activeFilter={albumFilter}
+                onFilterChange={setAlbumFilter}
+              />
+              <div className="discography-list">
+                {band.discography
+                  .filter((album) => albumFilter === ALL_FILTER || album.type === albumFilter)
+                  .map((album) => (
+                    <div key={album.album_id} className="discography-item">
+                      {accessToken && deviceId && (
+                        <AlbumPlayButton
+                          albumName={album.name}
+                          bandName={band.name}
+                          accessToken={accessToken}
+                          deviceId={deviceId}
+                        />
+                      )}
+                      <Link
+                        to={`/band/${band.ma_id}/album/${album.album_id}`}
+                        className="album-name"
+                      >
+                        {album.name}
+                      </Link>
+                      <span className="album-year">{album.release_date.match(/\d{4}/)?.[0] ?? album.release_date}</span>
+                    </div>
+                  ))}
+              </div>
+            </>
           ) : (
             <p className="empty-state">No discography data</p>
           )}
@@ -108,6 +129,80 @@ export function BandPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AlbumPlayButton({ albumName, bandName, accessToken, deviceId }: {
+  albumName: string;
+  bandName: string;
+  accessToken: string;
+  deviceId: string;
+}) {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'failed'>('idle');
+
+  const handlePlay = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (status === 'loading') return;
+
+    setStatus('loading');
+    try {
+      const results = await spotifySearch(`album:${albumName} artist:${bandName}`, 'album', accessToken);
+      const album = results.albums?.items?.[0];
+      if (album) {
+        await spotifyPlay(accessToken, { context_uri: album.uri });
+        setStatus('idle');
+      } else {
+        setStatus('failed');
+        setTimeout(() => setStatus('idle'), 2000);
+      }
+    } catch {
+      setStatus('failed');
+      setTimeout(() => setStatus('idle'), 2000);
+    }
+  };
+
+  return (
+    <button
+      className={`album-play-btn${status === 'failed' ? ' not-found' : ''}`}
+      onClick={handlePlay}
+      title={status === 'failed' ? 'Not found on Spotify' : `Play ${albumName}`}
+    >
+      {status === 'loading' ? '...' : status === 'failed' ? '✕' : '▶'}
+    </button>
+  );
+}
+
+function DiscographyFilters({ albums, activeFilter, onFilterChange }: {
+  albums: { type: string }[];
+  activeFilter: string;
+  onFilterChange: (filter: string) => void;
+}) {
+  const types = useMemo(() => {
+    const seen = new Set<string>();
+    for (const a of albums) {
+      if (a.type) seen.add(a.type);
+    }
+    const priority = ['Full-length', 'EP', 'Live album', 'Split'];
+    const ordered = priority.filter((t) => seen.has(t));
+    const rest = Array.from(seen).filter((t) => !priority.includes(t)).sort();
+    return [...ordered, ...rest, ALL_FILTER];
+  }, [albums]);
+
+  if (types.length <= 2) return null;
+
+  return (
+    <div className="discography-filters">
+      {types.map((type) => (
+        <button
+          key={type}
+          className={`discography-filter${activeFilter === type ? ' active' : ''}`}
+          onClick={() => onFilterChange(type)}
+        >
+          {type}
+        </button>
+      ))}
     </div>
   );
 }

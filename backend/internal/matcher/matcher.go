@@ -77,6 +77,22 @@ func (m *Matcher) fetchBandInner(maID int64) (*models.BandFull, error) {
 		if err := m.persistBand(full); err != nil {
 			log.Printf("failed to cache band %d: %v", maID, err)
 		}
+
+		// Supplement missing other bands from DB
+		for i := range full.CurrentLineup {
+			if len(full.CurrentLineup[i].OtherBands) == 0 {
+				if stored, err := m.store.GetMemberBands(full.CurrentLineup[i].MemberID); err == nil && len(stored) > 0 {
+					full.CurrentLineup[i].OtherBands = stored
+				}
+			}
+		}
+		for i := range full.PastLineup {
+			if len(full.PastLineup[i].OtherBands) == 0 {
+				if stored, err := m.store.GetMemberBands(full.PastLineup[i].MemberID); err == nil && len(stored) > 0 {
+					full.PastLineup[i].OtherBands = stored
+				}
+			}
+		}
 	}
 
 	return full, nil
@@ -178,6 +194,15 @@ func (m *Matcher) fetchAlbumInner(albumID int64) (*models.AlbumFull, error) {
 	if m.store != nil {
 		if err := m.persistAlbum(full); err != nil {
 			log.Printf("failed to cache album %d: %v", albumID, err)
+		}
+
+		// Supplement missing other bands from DB (may have been stored from band page scrape)
+		for i := range full.Lineup {
+			if len(full.Lineup[i].OtherBands) == 0 {
+				if stored, err := m.store.GetMemberBands(full.Lineup[i].MemberID); err == nil && len(stored) > 0 {
+					full.Lineup[i].OtherBands = stored
+				}
+			}
 		}
 	}
 

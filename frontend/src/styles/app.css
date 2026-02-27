@@ -1,3 +1,69 @@
+/* Logo link */
+.app-logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-logo-link:hover {
+  color: inherit;
+}
+
+/* Dashboard */
+.dashboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 100px);
+}
+
+.dashboard-center {
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.dashboard-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: normal;
+  letter-spacing: 4px;
+  color: var(--accent);
+  margin-bottom: 32px;
+}
+
+.dashboard-search {
+  margin-bottom: 24px;
+}
+
+.dashboard-search .search-container {
+  max-width: 100%;
+}
+
+.dashboard-search .search-input {
+  font-size: 16px;
+  padding: 14px 20px;
+}
+
+.dashboard-playback {
+  margin-top: 24px;
+}
+
+.playback-btn {
+  background: #1db954;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.playback-btn:hover {
+  background: #1ed760;
+}
+
 /* Login Page */
 .login-page {
   display: flex;
@@ -19,7 +85,7 @@
 
 .login-title {
   font-family: var(--font-display);
-  font-size: 42px;
+  font-size: 48px;
   font-weight: normal;
   letter-spacing: 4px;
   color: var(--accent);
@@ -183,9 +249,8 @@
 }
 
 .band-name {
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: normal;
+  font-size: 32px;
+  font-weight: 800;
   margin-bottom: 8px;
 }
 
@@ -208,10 +273,12 @@
 }
 
 .stat-label {
-  color: var(--text-muted);
-  font-size: 12px;
+  font-family: var(--font-display);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: normal;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .status-active {
@@ -249,14 +316,47 @@
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: normal;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   color: var(--accent);
   margin-bottom: 16px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
+}
+
+/* Discography filters */
+.discography-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.discography-filter {
+  padding: 4px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.discography-filter:hover {
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.discography-filter.active {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+  border-color: var(--accent);
 }
 
 /* Discography */
@@ -279,9 +379,41 @@
   background: var(--bg-hover);
 }
 
+.album-play-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.album-play-btn:hover {
+  background: #1db954;
+  color: #fff;
+}
+
+.album-play-btn.not-found {
+  color: var(--accent);
+}
+
 .album-name {
   flex: 1;
   font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.album-name:hover {
+  color: var(--link-hover);
 }
 
 .album-type {
@@ -392,9 +524,8 @@
 }
 
 .album-info .album-name {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: normal;
+  font-size: 28px;
+  font-weight: 800;
   margin-bottom: 4px;
 }
 

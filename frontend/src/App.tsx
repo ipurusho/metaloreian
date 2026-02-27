@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 import { PlayerProvider } from './player/PlayerContext';
@@ -25,6 +25,8 @@ const queryClient = new QueryClient({
 function AppLayout() {
   const { isAuthenticated, logout } = useAuth();
   const { autoDetectEnabled, setAutoDetect } = useAutoDetect();
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -32,23 +34,27 @@ function AppLayout() {
 
   return (
     <div className="app-layout">
-      <header className="app-header">
-        <h1>METALOREIAN</h1>
-        <SearchBar />
-        <div className="header-actions">
-          <label className="auto-detect-toggle">
-            <input
-              type="checkbox"
-              checked={autoDetectEnabled}
-              onChange={(e) => setAutoDetect(e.target.checked)}
-            />
-            Auto-detect
-          </label>
-          <button className="logout-btn" onClick={logout}>
-            Logout
-          </button>
-        </div>
-      </header>
+      {!isDashboard && (
+        <header className="app-header">
+          <Link to="/dashboard" className="app-logo-link">
+            <h1>METALOREIAN</h1>
+          </Link>
+          <SearchBar />
+          <div className="header-actions">
+            <label className="auto-detect-toggle">
+              <input
+                type="checkbox"
+                checked={autoDetectEnabled}
+                onChange={(e) => setAutoDetect(e.target.checked)}
+              />
+              Auto-detect
+            </label>
+            <button className="logout-btn" onClick={logout}>
+              Logout
+            </button>
+          </div>
+        </header>
+      )}
       <main className="app-main">
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
