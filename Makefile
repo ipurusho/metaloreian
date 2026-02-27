@@ -6,7 +6,7 @@ db:
 	docker compose up -d postgres
 
 backend:
-	cd backend && go run ./cmd/server
+	set -a && [ -f .env ] && . ./.env; cd backend && go run ./cmd/server
 
 frontend:
 	cd frontend && npm run dev
