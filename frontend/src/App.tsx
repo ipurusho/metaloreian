@@ -37,7 +37,7 @@ function AppLayout() {
       {!isDashboard && (
         <header className="app-header">
           <Link to="/dashboard" className="app-logo-link">
-            <h1>METALOREIAN</h1>
+            <h1>metalöreian</h1>
           </Link>
           <SearchBar />
           <div className="header-actions">
