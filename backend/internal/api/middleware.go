@@ -56,7 +56,10 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.Handler) http.Handler 
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ip := r.RemoteAddr
+			ip := r.Header.Get("X-Real-IP")
+			if ip == "" {
+				ip = r.RemoteAddr
+			}
 
 			mu.Lock()
 			v, exists := visitors[ip]

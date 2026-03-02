@@ -125,30 +125,124 @@ POST /api/spotify/refresh          Proxy token refresh
 GET  /health                       Health check
 ```
 
-## Deployment
+## Production deployment
 
-For production, use the provided `docker-compose.yml` as a starting point:
+The app deploys to an Oracle Cloud Always Free ARM VM with automated CI/CD via GitHub Actions. HTTPS is provided by Let's Encrypt via a free [is-a.dev](https://is-a.dev/) subdomain.
 
-```bash
-# Set required env vars
-export SPOTIFY_CLIENT_ID=your_client_id
-export POSTGRES_PASSWORD=a_strong_password
-export FRONTEND_URL=https://your-domain.com
+### Architecture
 
-docker compose up -d
+```
+GitHub push → GitHub Actions → Build ARM64 image → Push to GHCR → SSH deploy to VM
+
+VM:
+  nginx (80/443) → backend:8080 (Go + frontend static files)
+                    postgres:5432 (internal only)
+  certbot (auto-renews Let's Encrypt certs)
 ```
 
-Key environment variables:
+### Prerequisites
+
+- Oracle Cloud Always Free ARM A1.Flex VM (Ubuntu)
+- Domain: `metaloreian.is-a.dev` (A record → VM IP)
+- Spotify Developer Dashboard: `https://metaloreian.is-a.dev/callback` as redirect URI
+
+### VM initial setup (one-time)
+
+```bash
+# 1. Install Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+# Log out and back in for group change to take effect
+
+# 2. Open firewall (iptables + Oracle VCN Security List for 80/443)
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+sudo netfilter-persistent save
+
+# 3. Generate deploy SSH key
+ssh-keygen -t ed25519 -f ~/.ssh/deploy_key -N ""
+cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
+# Add the private key (~/.ssh/deploy_key) as GitHub secret VM_SSH_KEY
+
+# 4. Clone repo
+git clone https://github.com/ipurusho/metaloreian.git ~/metaloreian
+cd ~/metaloreian
+
+# 5. Create .env
+cat > .env << 'EOF'
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+POSTGRES_PASSWORD=a_strong_password
+FRONTEND_URL=https://metaloreian.is-a.dev
+EOF
+
+# 6. Initial deploy
+docker compose -f docker-compose.prod.yml up -d
+
+# 7. Obtain SSL certificate
+docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+  --webroot -w /var/www/certbot -d metaloreian.is-a.dev
+
+# 8. Reload nginx to pick up the real cert
+docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+```
+
+### is-a.dev domain registration
+
+Fork [is-a-dev/register](https://github.com/is-a-dev/register), create `domains/metaloreian.json`:
+
+```json
+{
+  "owner": {
+    "username": "ipurusho"
+  },
+  "record": {
+    "A": ["<VM_PUBLIC_IP>"]
+  }
+}
+```
+
+Open a PR — typically merges within hours.
+
+### GitHub secrets
+
+| Secret | Value |
+|--------|-------|
+| `VM_HOST` | Oracle VM public IP |
+| `VM_USER` | `ubuntu` |
+| `VM_SSH_KEY` | Deploy key (ed25519 private key) |
+| `VITE_SPOTIFY_CLIENT_ID` | Spotify Client ID (baked into frontend at build time) |
+
+### CI/CD workflow
+
+On every push to `main`, GitHub Actions:
+1. Builds an ARM64 Docker image (QEMU cross-compilation)
+2. Pushes to `ghcr.io/ipurusho/metaloreian:latest` and `:<sha>`
+3. SSHs into the VM, pulls the new image, and restarts
+
+### Rollback
+
+Every commit produces a tagged image. To roll back:
+
+```bash
+# On the VM, edit docker-compose.prod.yml to pin a specific sha
+# image: ghcr.io/ipurusho/metaloreian:<commit-sha>
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Environment variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `SPOTIFY_CLIENT_ID` | Yes | From Spotify Developer Dashboard |
-| `POSTGRES_PASSWORD` | Yes | PostgreSQL password (defaults to `metaloreian_dev` for local dev) |
-| `DATABASE_URL` | No | Full connection string (built from `POSTGRES_PASSWORD` in compose) |
-| `FRONTEND_URL` | No | CORS origin (defaults to `http://localhost:5173`) |
+| `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
+| `FRONTEND_URL` | No | CORS origin (defaults to `https://metaloreian.is-a.dev`) |
 | `PORT` | No | Backend listen port (defaults to `8080`) |
 
-The backend `Dockerfile` builds a static Go binary and serves the built frontend from `dist/`. In production, update the Spotify app's redirect URI to match your domain.
+### Key considerations
+
+- **CORS**: `FRONTEND_URL` must match the domain exactly (`https://metaloreian.is-a.dev`)
+- **Oracle idle VM reclaim**: VMs idle for 7 days (CPU/memory < 20%) may be reclaimed. Chromium usage should keep memory above threshold.
+- **Database persistence**: The `pgdata` volume survives container restarts. Only `docker compose down -v` destroys it.
 
 ## Notes on Metal Archives integration
 

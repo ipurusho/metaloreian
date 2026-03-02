@@ -1,57 +1,47 @@
-import { useAuth } from '../../auth/AuthProvider';
 import { usePlayer } from '../../player/PlayerContext';
+import { SearchBar } from '../search/SearchBar';
 
 export function DashboardPage() {
-  const { accessToken } = useAuth();
-  const { deviceId, sdkStatus, sdkError, currentTrack, isPlaying, transferPlayback } = usePlayer();
+  const { sdkStatus, currentTrack, transferPlayback } = usePlayer();
 
   return (
-    <div className="band-page">
-      <h1 className="band-name">METALOREIAN</h1>
-      <div className="band-stats" style={{ maxWidth: 500, marginTop: 24 }}>
-        <div className="stat">
-          <span className="stat-label">Auth:</span>{' '}
-          <span style={{ color: accessToken ? 'var(--success)' : 'var(--accent)' }}>
-            {accessToken ? 'Connected' : 'Not connected'}
-          </span>
+    <div className="dashboard">
+      <div className="dashboard-center">
+        <svg className="dashboard-logo" viewBox="0 0 600 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <path id="arc" d="M 30,100 Q 300,0 570,100" fill="none" />
+          </defs>
+          <text>
+            <textPath href="#arc" startOffset="50%" textAnchor="middle">metalöreian</textPath>
+          </text>
+        </svg>
+        <img className="login-mascot" src="/images/snaggletooth.png" alt="Metal Nerd Snaggletooth" />
+        <svg className="dashboard-tagline" viewBox="0 0 800 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <path id="dash-tagline-arc" d="M 20,10 Q 400,110 780,10" fill="none" />
+          </defs>
+          <text>
+            <textPath href="#dash-tagline-arc" startOffset="50%" textAnchor="middle">heavy metal nerdery</textPath>
+          </text>
+        </svg>
+        <p className="dashboard-subtitle">Metal knowledge while you listen.</p>
+        <p className="dashboard-subtitle">Spotify playback + Encyclopedia Metallum data.</p>
+        <div className="dashboard-search">
+          <SearchBar />
         </div>
-        <div className="stat">
-          <span className="stat-label">SDK Status:</span>{' '}
-          <span style={{ color: sdkStatus === 'ready' ? 'var(--success)' : sdkStatus === 'error' ? 'var(--accent)' : 'var(--warning)' }}>
-            {sdkStatus === 'ready' ? `Ready (${deviceId?.slice(0, 8)}...)` : sdkStatus === 'error' ? `Error: ${sdkError}` : 'Loading...'}
-          </span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Playback:</span>{' '}
-          {currentTrack
-            ? `${isPlaying ? 'Playing' : 'Paused'}: ${currentTrack.artists[0]?.name} — ${currentTrack.name}`
-            : 'No active track'}
-        </div>
+        {sdkStatus === 'ready' && !currentTrack && (
+          <div className="dashboard-playback">
+            <button className="playback-btn" onClick={transferPlayback}>
+              Start Playback Here
+            </button>
+            <p className="empty-state">
+              This will transfer Spotify playback to the Metaloreian player.
+              <br />
+              If nothing is queued, open Spotify and play something first.
+            </p>
+          </div>
+        )}
       </div>
-      {sdkStatus === 'ready' && !currentTrack && (
-        <div style={{ marginTop: 24 }}>
-          <button
-            onClick={transferPlayback}
-            style={{
-              background: '#1db954',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '24px',
-              padding: '12px 32px',
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            Start Playback Here
-          </button>
-          <p className="empty-state" style={{ marginTop: 12 }}>
-            This will transfer Spotify playback to the Metaloreian player.
-            <br />
-            If nothing is queued, open Spotify and play something first.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

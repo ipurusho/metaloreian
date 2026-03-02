@@ -183,7 +183,7 @@ func (s *Store) GetMemberBands(memberID int64) ([]models.MemberBand, error) {
 func (s *Store) GetDiscography(bandID int64) ([]models.Album, error) {
 	rows, err := s.db.Query(`
 		SELECT album_id, band_id, name, type, release_date, label, format, cover_url, scraped_at
-		FROM albums WHERE band_id = $1 ORDER BY release_date`, bandID)
+		FROM albums WHERE band_id = $1 ORDER BY substring(release_date FROM '\d{4}'), album_id`, bandID)
 	if err != nil {
 		return nil, err
 	}

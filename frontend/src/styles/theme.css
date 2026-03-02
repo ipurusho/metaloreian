@@ -1,3 +1,35 @@
+@font-face {
+  font-family: 'Metal Lord';
+  src: url('/fonts/MetalLord.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Slaytanic';
+  src: url('/fonts/Slaytanic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Motorhead';
+  src: url('/fonts/Motorhead.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Civitype';
+  src: url('/fonts/Civitype.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg-primary: #0a0a0a;
   --bg-secondary: #141414;
@@ -23,6 +55,10 @@
   --radius-lg: 8px;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Metal Lord', sans-serif;
+  --font-heading: 'Slaytanic', sans-serif;
+  --font-logo: 'Motorhead', sans-serif;
+  --font-subtitle: 'Civitype', serif;
 }
 
 * {
@@ -94,11 +130,11 @@ input {
 }
 
 .app-header h1 {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--accent);
+  font-family: var(--font-logo);
+  font-size: 28px;
+  font-weight: normal;
+  letter-spacing: 3px;
+  color: #fff;
 }
 
 .app-main {
