@@ -22,7 +22,7 @@ services:
     environment:
       DATABASE_URL: postgres://metaloreian:${POSTGRES_PASSWORD}@postgres:5432/metaloreian?sslmode=disable
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?Set SPOTIFY_CLIENT_ID in .env}
-      FRONTEND_URL: ${FRONTEND_URL:-https://metaloreian.is-a.dev}
+      FRONTEND_URL: ${FRONTEND_URL:-https://metaloreian.duckdns.org}
       PORT: "8080"
     shm_size: 256m
     healthcheck:
@@ -46,7 +46,6 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - certbot-webroot:/var/www/certbot:ro
       - certbot-certs:/etc/letsencrypt:ro
     depends_on:
       - backend
@@ -55,13 +54,13 @@ services:
     restart: unless-stopped
 
   certbot:
-    image: certbot/certbot:v3.3.0
+    image: infinityofspace/certbot_dns_duckdns:v1.8.0@sha256:b0af09403424eef05a3f2d2421c32f123acbef45e0a0fe969895c2e58390dc43
+    environment:
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN:?Set DUCKDNS_TOKEN in .env}
     volumes:
-      - certbot-webroot:/var/www/certbot
       - certbot-certs:/etc/letsencrypt
-    networks:
-      - web
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+    networks: []
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --dns-duckdns; sleep 12h & wait $${!}; done'"
 
 networks:
   db:
@@ -69,5 +68,4 @@ networks:
 
 volumes:
   pgdata:
-  certbot-webroot:
   certbot-certs:
