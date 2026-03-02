@@ -60,7 +60,7 @@ services:
     volumes:
       - certbot-certs:/etc/letsencrypt
     networks: []
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --dns-duckdns; sleep 12h & wait $${!}; done'"
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
 
 networks:
   db:
