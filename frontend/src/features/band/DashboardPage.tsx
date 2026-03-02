@@ -21,7 +21,7 @@ export function DashboardPage() {
             <path id="dash-tagline-arc" d="M 20,10 Q 400,110 780,10" fill="none" />
           </defs>
           <text>
-            <textPath href="#dash-tagline-arc" startOffset="50%" textAnchor="middle">music nerds</textPath>
+            <textPath href="#dash-tagline-arc" startOffset="50%" textAnchor="middle">heavy metal nerdery</textPath>
           </text>
         </svg>
         <p className="dashboard-subtitle">Metal knowledge while you listen.</p>

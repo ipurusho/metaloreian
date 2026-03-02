@@ -26,7 +26,7 @@ export function LoginPage() {
             <path id="login-tagline-arc" d="M 20,10 Q 400,110 780,10" fill="none" />
           </defs>
           <text>
-            <textPath href="#login-tagline-arc" startOffset="50%" textAnchor="middle">music nerds</textPath>
+            <textPath href="#login-tagline-arc" startOffset="50%" textAnchor="middle">heavy metal nerdery</textPath>
           </text>
         </svg>
         <p className="login-subtitle">Metal knowledge while you listen.</p>
