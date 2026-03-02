@@ -86,7 +86,6 @@ export function BandPage() {
                           albumName={album.name}
                           bandName={band.name}
                           accessToken={accessToken}
-                          deviceId={deviceId}
                         />
                       )}
                       <Link
@@ -133,11 +132,10 @@ export function BandPage() {
   );
 }
 
-function AlbumPlayButton({ albumName, bandName, accessToken, deviceId }: {
+function AlbumPlayButton({ albumName, bandName, accessToken }: {
   albumName: string;
   bandName: string;
   accessToken: string;
-  deviceId: string;
 }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'failed'>('idle');
 
