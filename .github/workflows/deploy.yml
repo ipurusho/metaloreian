@@ -70,13 +70,14 @@ jobs:
           echo "${SSH_KEY}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           echo "${KNOWN_HOSTS}" >> ~/.ssh/known_hosts
+          echo 'SSH_OPTS=-o StrictHostKeyChecking=yes -o ConnectTimeout=10' >> "$GITHUB_ENV"
 
       - name: Copy config files to VM
         env:
           VM_USER: ${{ secrets.VM_USER }}
           VM_HOST: ${{ secrets.VM_HOST }}
         run: |
-          scp -i ~/.ssh/deploy_key -r \
+          scp ${SSH_OPTS} -i ~/.ssh/deploy_key -r \
             docker-compose.prod.yml nginx.conf backend/migrations \
             "${VM_USER}@${VM_HOST}:~/metaloreian/"
 
@@ -87,7 +88,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
         run: |
-          SSH="ssh -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
+          SSH="ssh ${SSH_OPTS} -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
           ${SSH} "mkdir -p ~/metaloreian/backend/migrations"
           printf 'POSTGRES_PASSWORD=%s\nSPOTIFY_CLIENT_ID=%s\nFRONTEND_URL=https://metaloreian.is-a.dev\n' \
             "${POSTGRES_PASSWORD}" "${SPOTIFY_CLIENT_ID}" | \
@@ -98,7 +99,7 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
           VM_HOST: ${{ secrets.VM_HOST }}
         run: |
-          SSH="ssh -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
+          SSH="ssh ${SSH_OPTS} -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
           ${SSH} "cd ~/metaloreian && \
             docker compose -f docker-compose.prod.yml pull backend && \
             docker compose -f docker-compose.prod.yml up -d && \
