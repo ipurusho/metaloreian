@@ -102,7 +102,7 @@ jobs:
           VM_HOST: ${{ secrets.VM_HOST }}
         run: |
           SSH="ssh ${SSH_OPTS} -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
-          ${SSH} "cd ~/metaloreian && \
+          ${SSH} "cd ~/app && \
             docker compose -f docker-compose.prod.yml pull backend && \
             docker compose -f docker-compose.prod.yml up -d && \
             docker image prune -f --filter 'label=org.opencontainers.image.source'"
