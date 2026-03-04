@@ -49,8 +49,10 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           build-args: |
             VITE_SPOTIFY_CLIENT_ID=${{ vars.VITE_SPOTIFY_CLIENT_ID }}
-          cache-from: type=gha,scope=${{ github.ref_name }}
-          cache-to: type=gha,mode=max,scope=${{ github.ref_name }}
+          cache-from: |
+            type=gha,scope=build-${{ github.sha }}
+            type=gha,scope=build-main
+          cache-to: type=gha,mode=max,scope=build-${{ github.sha }}
 
   deploy:
     needs: build-and-push
