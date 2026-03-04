@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	sc := scraper.NewClient()
+	sc := scraper.NewClient("")
 	// Dump raw HTML of an album page
 	html, err := sc.FetchHTMLPublic(context.Background(), "https://www.metal-archives.com/albums/Metallica/Master_of_Puppets/547")
 	if err != nil {

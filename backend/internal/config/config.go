@@ -7,6 +7,7 @@ type Config struct {
 	DatabaseURL     string
 	SpotifyClientID string
 	FrontendURL     string
+	FlareSolverrURL string
 }
 
 func Load() *Config {
@@ -15,6 +16,7 @@ func Load() *Config {
 		DatabaseURL:     getEnv("DATABASE_URL", "postgres:///metaloreian?host=/tmp&sslmode=disable"),
 		SpotifyClientID: getEnv("SPOTIFY_CLIENT_ID", ""),
 		FrontendURL:     getEnv("FRONTEND_URL", "http://localhost:5173"),
+		FlareSolverrURL: getEnv("FLARESOLVERR_URL", ""),
 	}
 }
 
