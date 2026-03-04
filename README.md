@@ -7,7 +7,7 @@ Metaloreian unites [Encyclopedia Metallum](https://www.metal-archives.com/) with
 | Layer | Tech | Role |
 |-------|------|------|
 | Frontend | React, TypeScript, Vite | Spotify Web Playback SDK, UI, routing |
-| Backend | Go (chi, goquery, rod) | REST API, Metal Archives scraper, caching |
+| Backend | Go (chi, goquery, net/http) | REST API, Metal Archives scraper, caching |
 | Database | PostgreSQL | Optional cache for scraped MA data |
 | Auth | Spotify OAuth2 PKCE | No separate account system — Spotify login is the identity |
 
@@ -47,9 +47,9 @@ metaloreian/
 
 ## Prerequisites
 
-- **Go 1.21+**
+- **Go 1.23+**
 - **Node.js 18+**
-- **Chromium** (or dependencies for headless Chrome — `libnss3`, `libasound2`)
+- **Docker** (for FlareSolverr sidecar and optional PostgreSQL)
 - **PostgreSQL 15+** (optional — app runs in scrape-only mode without it)
 - **Spotify Premium** account (required for Web Playback SDK)
 
@@ -87,16 +87,24 @@ Or skip this step — the backend will run in scrape-only mode (no caching).
 psql "$DATABASE_URL" -f backend/migrations/001_initial_schema.sql
 ```
 
-### 4. Start the backend
+### 4. Start FlareSolverr
+
+FlareSolverr is a headless browser sidecar that solves Cloudflare challenges when Metal Archives is in strict protection mode.
+
+```bash
+docker run -d --name flaresolverr -p 8191:8191 ghcr.io/flaresolverr/flaresolverr:latest
+```
+
+### 5. Start the backend
 
 ```bash
 cd backend
-go run ./cmd/server
+FLARESOLVERR_URL=http://localhost:8191 go run ./cmd/server
 ```
 
 The server starts on `:8080`. Set `SPOTIFY_CLIENT_ID` and `DATABASE_URL` via environment or `.env`.
 
-### 5. Start the frontend
+### 6. Start the frontend
 
 ```bash
 cd frontend
@@ -106,7 +114,7 @@ npm run dev
 
 Opens at `http://127.0.0.1:5173`. The Vite dev server proxies `/api` requests to the backend.
 
-### 6. Use the app
+### 7. Use the app
 
 1. Open `http://127.0.0.1:5173` and click **Connect with Spotify**.
 2. After auth, use the search bar to find a band.
@@ -135,7 +143,8 @@ The app deploys to an AWS EC2 t3.small instance (2 vCPU, 2GB RAM) with automated
 GitHub push → GitHub Actions → Build amd64 image → Push to GHCR → SSH deploy to VM
 
 EC2 t3.small (2GB RAM):
-  nginx (80/443)  → backend:8080 (Go + Chromium + frontend static)
+  nginx (80/443)  → backend:8080 (Go + frontend static)
+                     flaresolverr:8191 (Cloudflare challenge solver)
                      postgres:5432 (internal only)
   certbot (DNS-01 via DuckDNS)
 ```
@@ -229,6 +238,7 @@ docker compose -f docker-compose.prod.yml up -d
 | `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
 | `DUCKDNS_TOKEN` | Yes | DuckDNS token for DNS-01 cert challenges |
 | `FRONTEND_URL` | No | CORS origin (defaults to `https://metaloreian-dev.duckdns.org`) |
+| `FLARESOLVERR_URL` | No | FlareSolverr endpoint (defaults to empty — no fallback) |
 | `PORT` | No | Backend listen port (defaults to `8080`) |
 
 ### Key considerations
@@ -238,6 +248,8 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## Notes on Metal Archives integration
 
+- The scraper uses plain `net/http` with an `X-Requested-With: XMLHttpRequest` header, which bypasses Cloudflare in normal protection mode.
+- When Cloudflare is in strict mode, the backend falls back to [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) — a headless browser sidecar that solves Cloudflare challenges and returns page content.
 - A token bucket rate limiter (1 request / 3 seconds) keeps request volume low.
 - `singleflight` deduplication ensures concurrent requests for the same band/album only trigger one fetch.
 - Scraped data is cached in PostgreSQL with a 7-day TTL to minimize repeated requests.

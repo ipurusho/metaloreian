@@ -33,7 +33,7 @@ func main() {
 		log.Printf("database unavailable, running in scrape-only mode: %v", err)
 	}
 
-	sc := scraper.NewClient()
+	sc := scraper.NewClient(cfg.FlareSolverrURL)
 	m := matcher.New(s, sc)
 
 	router := api.NewRouter(cfg, s, m, m)

@@ -16,6 +16,13 @@ services:
       timeout: 5s
       retries: 5
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    environment:
+      LOG_LEVEL: info
+    ports:
+      - "8191:8191"
+
   backend:
     build:
       context: .
@@ -28,10 +35,13 @@ services:
       DATABASE_URL: postgres://metaloreian:${POSTGRES_PASSWORD:-metaloreian_dev}@postgres:5432/metaloreian?sslmode=disable
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?Set SPOTIFY_CLIENT_ID in .env}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      FLARESOLVERR_URL: http://flaresolverr:8191
       PORT: "8080"
     depends_on:
       postgres:
         condition: service_healthy
+      flaresolverr:
+        condition: service_started
 
 volumes:
   pgdata:

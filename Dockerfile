@@ -15,26 +15,12 @@ RUN go mod download
 COPY backend/ .
 RUN CGO_ENABLED=0 go build -o metaloreian ./cmd/server
 
-# Stage 3 — Runtime with Chromium
-FROM debian:bookworm-slim
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        chromium \
-        ca-certificates \
-        fonts-liberation \
-        wget && \
-    rm -rf /var/lib/apt/lists/* && \
-    useradd -r -m -s /bin/false appuser
-
-ENV CHROME_PATH=/usr/bin/chromium
-ENV CHROMIUM_FLAGS="--no-sandbox"
-
+# Stage 3 — Runtime (no Chromium needed)
+FROM gcr.io/distroless/static-debian12
 WORKDIR /app
 COPY --from=backend /app/metaloreian .
 COPY --from=frontend /app/frontend/dist ./dist
 COPY backend/migrations ./migrations
-RUN chown -R appuser:appuser /app
-
-USER appuser
 EXPOSE 8080
+USER nonroot:nonroot
 CMD ["./metaloreian"]

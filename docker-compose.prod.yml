@@ -17,14 +17,22 @@ services:
       - db
     restart: unless-stopped
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    environment:
+      LOG_LEVEL: info
+    networks:
+      - web
+    restart: unless-stopped
+
   backend:
     image: ghcr.io/ipurusho/metaloreian:latest
     environment:
       DATABASE_URL: postgres://metaloreian:${POSTGRES_PASSWORD}@postgres:5432/metaloreian?sslmode=disable
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?Set SPOTIFY_CLIENT_ID in .env}
       FRONTEND_URL: ${FRONTEND_URL:-https://metaloreian-dev.duckdns.org}
+      FLARESOLVERR_URL: http://flaresolverr:8191
       PORT: "8080"
-    shm_size: 256m
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://localhost:8080/health"]
       interval: 30s
@@ -34,6 +42,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      flaresolverr:
+        condition: service_started
     networks:
       - db
       - web
