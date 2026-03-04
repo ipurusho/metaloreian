@@ -127,24 +127,24 @@ GET  /health                       Health check
 
 ## Production deployment
 
-The app deploys to an Oracle Cloud Always Free ARM VM with automated CI/CD via GitHub Actions. HTTPS is provided by Let's Encrypt via a free [is-a.dev](https://is-a.dev/) subdomain.
+The app deploys to an AWS EC2 t3.small instance (2 vCPU, 2GB RAM) with automated CI/CD via GitHub Actions. HTTPS is provided by Let's Encrypt via DNS-01 challenge with [DuckDNS](https://www.duckdns.org/).
 
 ### Architecture
 
 ```
-GitHub push → GitHub Actions → Build ARM64 image → Push to GHCR → SSH deploy to VM
+GitHub push → GitHub Actions → Build amd64 image → Push to GHCR → SSH deploy to VM
 
-VM:
-  nginx (80/443) → backend:8080 (Go + frontend static files)
-                    postgres:5432 (internal only)
-  certbot (auto-renews Let's Encrypt certs)
+EC2 t3.small (2GB RAM):
+  nginx (80/443)  → backend:8080 (Go + Chromium + frontend static)
+                     postgres:5432 (internal only)
+  certbot (DNS-01 via DuckDNS)
 ```
 
 ### Prerequisites
 
-- Oracle Cloud Always Free ARM A1.Flex VM (Ubuntu)
-- Domain: `metaloreian.is-a.dev` (A record → VM IP)
-- Spotify Developer Dashboard: `https://metaloreian.is-a.dev/callback` as redirect URI
+- AWS EC2 t3.small instance (Ubuntu 22.04)
+- Domain: `metaloreian-dev.duckdns.org` (DuckDNS → Elastic IP)
+- Spotify Developer Dashboard: `https://metaloreian-dev.duckdns.org/callback` as redirect URI
 
 ### VM initial setup (one-time)
 
@@ -154,70 +154,62 @@ curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
 # Log out and back in for group change to take effect
 
-# 2. Open firewall (iptables + Oracle VCN Security List for 80/443)
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-sudo netfilter-persistent save
+# 2. Create deploy user
+sudo useradd -m -s /bin/bash metaloreian
+sudo usermod -aG docker metaloreian
 
-# 3. Generate deploy SSH key
-ssh-keygen -t ed25519 -f ~/.ssh/deploy_key -N ""
-cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
-# Add the private key (~/.ssh/deploy_key) as GitHub secret VM_SSH_KEY
+# 3. Configure firewall
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
 
-# 4. Clone repo
-git clone https://github.com/ipurusho/metaloreian.git ~/metaloreian
-cd ~/metaloreian
+# 4. Security hardening
+sudo apt-get install -y fail2ban unattended-upgrades
 
-# 5. Create .env
-cat > .env << 'EOF'
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-POSTGRES_PASSWORD=a_strong_password
-FRONTEND_URL=https://metaloreian.is-a.dev
-EOF
+# 5. Set up SSH for deploy user
+sudo -u metaloreian bash -c '
+  mkdir -p ~/.ssh && chmod 700 ~/.ssh
+'
+# Copy authorized_keys to deploy user
 
-# 6. Initial deploy
-docker compose -f docker-compose.prod.yml up -d
+# 6. Create app directory
+sudo -u metaloreian mkdir -p ~/app
 
-# 7. Obtain SSL certificate
-docker compose -f docker-compose.prod.yml run --rm certbot certonly \
-  --webroot -w /var/www/certbot -d metaloreian.is-a.dev
+# 7. Initial deploy (triggered by GitHub Actions push to main)
 
-# 8. Reload nginx to pick up the real cert
-docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+# 8. Obtain SSL certificate (DNS-01 via DuckDNS)
+sudo -u metaloreian bash -c 'cd ~/app && \
+  docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+    --authenticator dns-duckdns \
+    --dns-duckdns-token $DUCKDNS_TOKEN \
+    --dns-duckdns-propagation-seconds 60 \
+    -d metaloreian-dev.duckdns.org --agree-tos -m your@email.com'
+
+# 9. Reload nginx to pick up the real cert
+sudo -u metaloreian bash -c 'cd ~/app && docker compose -f docker-compose.prod.yml exec nginx nginx -s reload'
 ```
-
-### is-a.dev domain registration
-
-Fork [is-a-dev/register](https://github.com/is-a-dev/register), create `domains/metaloreian.json`:
-
-```json
-{
-  "owner": {
-    "username": "ipurusho"
-  },
-  "record": {
-    "A": ["<VM_PUBLIC_IP>"]
-  }
-}
-```
-
-Open a PR — typically merges within hours.
 
 ### GitHub secrets
 
 | Secret | Value |
 |--------|-------|
-| `VM_HOST` | Oracle VM public IP |
-| `VM_USER` | `ubuntu` |
+| `VM_HOST` | EC2 Elastic IP |
+| `VM_USER` | `metaloreian` |
 | `VM_SSH_KEY` | Deploy key (ed25519 private key) |
+| `VM_SSH_KNOWN_HOSTS` | Output of `ssh-keyscan -H <elastic-ip>` |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `SPOTIFY_CLIENT_ID` | Spotify Client ID (runtime) |
+| `DUCKDNS_TOKEN` | DuckDNS token for DNS-01 cert renewal |
+| `FRONTEND_URL` | `https://metaloreian-dev.duckdns.org` |
 | `VITE_SPOTIFY_CLIENT_ID` | Spotify Client ID (baked into frontend at build time) |
 
 ### CI/CD workflow
 
 On every push to `main`, GitHub Actions:
-1. Builds an ARM64 Docker image (QEMU cross-compilation)
+1. Builds an amd64 Docker image
 2. Pushes to `ghcr.io/ipurusho/metaloreian:latest` and `:<sha>`
-3. SSHs into the VM, pulls the new image, and restarts
+3. SSHs into the VM, copies config files, writes `.env`, pulls the new image, and restarts containers
 
 ### Rollback
 
@@ -235,13 +227,13 @@ docker compose -f docker-compose.prod.yml up -d
 |----------|----------|-------------|
 | `SPOTIFY_CLIENT_ID` | Yes | From Spotify Developer Dashboard |
 | `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
-| `FRONTEND_URL` | No | CORS origin (defaults to `https://metaloreian.is-a.dev`) |
+| `DUCKDNS_TOKEN` | Yes | DuckDNS token for DNS-01 cert challenges |
+| `FRONTEND_URL` | No | CORS origin (defaults to `https://metaloreian-dev.duckdns.org`) |
 | `PORT` | No | Backend listen port (defaults to `8080`) |
 
 ### Key considerations
 
-- **CORS**: `FRONTEND_URL` must match the domain exactly (`https://metaloreian.is-a.dev`)
-- **Oracle idle VM reclaim**: VMs idle for 7 days (CPU/memory < 20%) may be reclaimed. Chromium usage should keep memory above threshold.
+- **CORS**: `FRONTEND_URL` must match the domain exactly (`https://metaloreian-dev.duckdns.org`)
 - **Database persistence**: The `pgdata` volume survives container restarts. Only `docker compose down -v` destroys it.
 
 ## Notes on Metal Archives integration

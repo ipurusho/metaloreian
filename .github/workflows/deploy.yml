@@ -79,7 +79,7 @@ jobs:
         run: |
           scp ${SSH_OPTS} -i ~/.ssh/deploy_key -r \
             docker-compose.prod.yml nginx.conf backend/migrations \
-            "${VM_USER}@${VM_HOST}:~/metaloreian/"
+            "${VM_USER}@${VM_HOST}:~/app/"
 
       - name: Write .env to VM
         env:
@@ -88,12 +88,13 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
         run: |
           SSH="ssh ${SSH_OPTS} -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
-          ${SSH} "mkdir -p ~/metaloreian/backend/migrations"
-          printf 'POSTGRES_PASSWORD=%s\nSPOTIFY_CLIENT_ID=%s\nFRONTEND_URL=https://metaloreian.duckdns.org\nDUCKDNS_TOKEN=%s\n' \
-            "${POSTGRES_PASSWORD}" "${SPOTIFY_CLIENT_ID}" "${DUCKDNS_TOKEN}" | \
-            ${SSH} "umask 077 && cat > ~/metaloreian/.env"
+          ${SSH} "mkdir -p ~/app/backend/migrations"
+          printf 'POSTGRES_PASSWORD=%s\nSPOTIFY_CLIENT_ID=%s\nFRONTEND_URL=%s\nDUCKDNS_TOKEN=%s\n' \
+            "${POSTGRES_PASSWORD}" "${SPOTIFY_CLIENT_ID}" "${FRONTEND_URL}" "${DUCKDNS_TOKEN}" | \
+            ${SSH} "umask 077 && cat > ~/app/.env"
 
       - name: Deploy containers on VM
         env:

@@ -22,7 +22,7 @@ services:
     environment:
       DATABASE_URL: postgres://metaloreian:${POSTGRES_PASSWORD}@postgres:5432/metaloreian?sslmode=disable
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?Set SPOTIFY_CLIENT_ID in .env}
-      FRONTEND_URL: ${FRONTEND_URL:-https://metaloreian.duckdns.org}
+      FRONTEND_URL: ${FRONTEND_URL:-https://metaloreian-dev.duckdns.org}
       PORT: "8080"
     shm_size: 256m
     healthcheck:
