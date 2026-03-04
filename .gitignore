@@ -17,3 +17,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Claude Code
+CLAUDE.local.md
