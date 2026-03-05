@@ -16,11 +16,14 @@ COPY backend/ .
 RUN CGO_ENABLED=0 go build -o metaloreian ./cmd/server
 
 # Stage 3 — Runtime (no Chromium needed)
-FROM gcr.io/distroless/static-debian12
+FROM alpine:3.21
+RUN apk add --no-cache wget ca-certificates && \
+    adduser -D -s /sbin/nologin appuser
 WORKDIR /app
 COPY --from=backend /app/metaloreian .
 COPY --from=frontend /app/frontend/dist ./dist
 COPY backend/migrations ./migrations
+RUN chown -R appuser:appuser /app
+USER appuser
 EXPOSE 8080
-USER nonroot:nonroot
 CMD ["./metaloreian"]
