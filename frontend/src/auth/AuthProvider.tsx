@@ -24,14 +24,14 @@ export function useAuth() {
 
 function loadAuth(): AuthState {
   try {
-    const stored = localStorage.getItem('metaloreian_auth');
+    const stored = sessionStorage.getItem('metaloreian_auth');
     if (stored) return JSON.parse(stored);
   } catch {}
   return { accessToken: null, refreshToken: null, expiresAt: null };
 }
 
 function saveAuth(state: AuthState) {
-  localStorage.setItem('metaloreian_auth', JSON.stringify(state));
+  sessionStorage.setItem('metaloreian_auth', JSON.stringify(state));
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     const state: AuthState = { accessToken: null, refreshToken: null, expiresAt: null };
     setAuth(state);
-    localStorage.removeItem('metaloreian_auth');
+    sessionStorage.removeItem('metaloreian_auth');
   }, []);
 
   // Auto-refresh token before expiry

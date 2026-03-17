@@ -8,7 +8,7 @@ ARG VITE_SPOTIFY_CLIENT_ID
 RUN npm run build
 
 # Stage 2 — Build Go binary
-FROM golang:1.23-bookworm AS backend
+FROM golang:1.25-bookworm AS backend
 WORKDIR /app
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
