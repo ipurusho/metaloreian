@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend db migrate clean build
+.PHONY: dev backend frontend db migrate clean build test test-backend test-frontend
 
 dev: db backend frontend
 
@@ -20,6 +20,14 @@ clean:
 build:
 	cd frontend && npm run build
 	cd backend && CGO_ENABLED=0 go build -o metaloreian ./cmd/server
+
+test: test-backend test-frontend
+
+test-backend:
+	cd backend && go test ./...
+
+test-frontend:
+	cd frontend && npm test
 
 docker:
 	docker compose up --build
