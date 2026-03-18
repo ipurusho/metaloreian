@@ -14,6 +14,8 @@
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 100px);
+  /* P1: Radial vignette on dashboard */
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
 }
 
 .dashboard-center {
@@ -22,11 +24,13 @@
   max-width: 600px;
 }
 
+/* P2: Subtle glow pulse on dashboard logo SVG */
 .dashboard-logo {
   width: 100%;
   max-width: 500px;
   height: auto;
   margin-bottom: -32px;
+  animation: glowPulse 4s ease-in-out infinite;
 }
 
 .dashboard-logo text {
@@ -78,10 +82,13 @@
   background: var(--bg-primary);
 }
 
+/* P1: Subtle texture on bg-secondary surfaces */
 .login-card {
   text-align: center;
   padding: 48px;
-  background: var(--bg-secondary);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='%23ffffff' opacity='0.03'/%3E%3C/svg%3E") repeat,
+    var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   max-width: 560px;
@@ -263,25 +270,56 @@
   margin: 0 auto;
 }
 
+/* P3: Hero-style band header */
 .band-header {
+  position: relative;
   display: flex;
   gap: 24px;
   margin-bottom: 32px;
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-secondary);
 }
 
+/* P3: Band photo as background with gradient overlay */
 .band-photo {
-  flex-shrink: 0;
-  width: 250px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 .band-photo img {
   width: 100%;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.25;
+  border-radius: 0;
+  border: none;
+}
+
+.band-photo::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(10, 10, 10, 0.95) 0%,
+    rgba(10, 10, 10, 0.7) 50%,
+    rgba(10, 10, 10, 0.5) 100%
+  );
 }
 
 .band-info {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .band-name {
@@ -290,28 +328,35 @@
   margin-bottom: 8px;
 }
 
+/* P3: Larger, more prominent band logo */
 .band-logo {
-  max-width: 200px;
-  max-height: 60px;
+  max-width: 300px;
+  max-height: 90px;
   margin-bottom: 16px;
-  filter: invert(0.8);
+  filter: none;
 }
 
+/* P3: Pill/badge style stats */
 .band-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
 }
 
 .stat {
   color: var(--text-secondary);
+  padding: 4px 12px;
+  background: rgba(10, 10, 10, 0.6);
+  border: 1px solid var(--accent-dim);
+  border-radius: 20px;
+  font-size: 13px;
 }
 
 .stat-label {
   font-family: var(--font-display);
   color: var(--accent);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: normal;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -408,11 +453,29 @@
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text-primary);
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.2s ease, box-shadow 0.2s ease;
+  /* P2: Staggered fade-in */
+  animation: fadeInUp 0.4s ease both;
 }
+
+/* P2: Staggered animation delay */
+.discography-item:nth-child(1) { animation-delay: 0s; }
+.discography-item:nth-child(2) { animation-delay: 0.04s; }
+.discography-item:nth-child(3) { animation-delay: 0.08s; }
+.discography-item:nth-child(4) { animation-delay: 0.12s; }
+.discography-item:nth-child(5) { animation-delay: 0.16s; }
+.discography-item:nth-child(6) { animation-delay: 0.20s; }
+.discography-item:nth-child(7) { animation-delay: 0.24s; }
+.discography-item:nth-child(8) { animation-delay: 0.28s; }
+.discography-item:nth-child(9) { animation-delay: 0.32s; }
+.discography-item:nth-child(10) { animation-delay: 0.36s; }
+.discography-item:nth-child(n+11) { animation-delay: 0.40s; }
 
 .discography-item:hover {
   background: var(--bg-hover);
+  /* P2: Hover lift */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .album-play-btn {
@@ -475,7 +538,19 @@
 .member-row {
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
+  /* P2: Staggered fade-in */
+  animation: fadeInUp 0.4s ease both;
 }
+
+.member-row:nth-child(1) { animation-delay: 0s; }
+.member-row:nth-child(2) { animation-delay: 0.05s; }
+.member-row:nth-child(3) { animation-delay: 0.10s; }
+.member-row:nth-child(4) { animation-delay: 0.15s; }
+.member-row:nth-child(5) { animation-delay: 0.20s; }
+.member-row:nth-child(6) { animation-delay: 0.25s; }
+.member-row:nth-child(7) { animation-delay: 0.30s; }
+.member-row:nth-child(8) { animation-delay: 0.35s; }
+.member-row:nth-child(n+9) { animation-delay: 0.40s; }
 
 .member-info {
   display: flex;
@@ -655,10 +730,12 @@
   flex: 0 0 240px;
 }
 
+/* P4: Subtle accent glow around album art */
 .player-album-art {
   width: 56px;
   height: 56px;
   border-radius: var(--radius);
+  box-shadow: 0 0 8px rgba(192, 57, 43, 0.4), 0 0 2px rgba(192, 57, 43, 0.2);
 }
 
 .player-text {
@@ -739,11 +816,13 @@
   position: relative;
 }
 
+/* P4: Glow effect on progress bar fill */
 .player-progress-fill {
   height: 100%;
   background: var(--player-progress);
   border-radius: 2px;
   transition: width 0.5s linear;
+  box-shadow: 0 0 6px rgba(192, 57, 43, 0.6), 0 0 2px rgba(192, 57, 43, 0.3);
 }
 
 .player-progress-bar:hover .player-progress-fill {
@@ -761,11 +840,25 @@
 @media (max-width: 768px) {
   .band-header {
     flex-direction: column;
+    padding: 24px;
   }
 
   .band-photo {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 250px;
+    height: 100%;
+    max-width: none;
+  }
+
+  .band-stats {
+    flex-direction: column;
+  }
+
+  .band-logo {
+    max-width: 200px;
+    max-height: 60px;
   }
 
   .band-content {
