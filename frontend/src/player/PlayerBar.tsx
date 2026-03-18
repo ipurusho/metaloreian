@@ -89,13 +89,25 @@ export function PlayerBar() {
 
       <div className="player-controls">
         <button className="player-btn" onClick={prevTrack} title="Previous">
-          ⏮
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M3 2h2v12H3V2zm11 0L7 8l7 6V2z" />
+          </svg>
         </button>
         <button className="player-btn player-btn-play" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? '⏸' : '▶'}
+          {isPlaying ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3 2h4v12H3V2zm6 0h4v12H9V2z" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4 2l10 6-10 6V2z" />
+            </svg>
+          )}
         </button>
         <button className="player-btn" onClick={nextTrack} title="Next">
-          ⏭
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M2 2l7 6-7 6V2zm9 0h2v12h-2V2z" />
+          </svg>
         </button>
       </div>
 
