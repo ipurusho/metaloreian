@@ -72,3 +72,11 @@ type AlbumFull struct {
 	Tracks    []Track  `json:"tracks"`
 	Lineup    []Member `json:"lineup"`
 }
+
+type SimilarBand struct {
+	MAID    int64   `json:"ma_id"`
+	Name    string  `json:"name"`
+	Genre   string  `json:"genre"`
+	Country string  `json:"country"`
+	Score   float64 `json:"score"`
+}

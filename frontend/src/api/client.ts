@@ -97,6 +97,18 @@ export function getAlbum(albumId: number): Promise<AlbumFull> {
   return fetchJSON(`${API_BASE}/albums/${albumId}`);
 }
 
+export interface SimilarBand {
+  ma_id: number;
+  name: string;
+  genre: string;
+  country: string;
+  score: number;
+}
+
+export function getSimilarBands(maId: number): Promise<SimilarBand[]> {
+  return fetchJSON(`${API_BASE}/bands/${maId}/similar`);
+}
+
 // Spotify token exchange — direct to Spotify (no backend proxy needed)
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;

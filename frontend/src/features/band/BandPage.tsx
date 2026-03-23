@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getBand, spotifySearch, spotifyPlay } from '../../api/client';
+import { getBand, getSimilarBands, spotifySearch, spotifyPlay } from '../../api/client';
 import { useAuth } from '../../auth/AuthProvider';
 import { usePlayer } from '../../player/PlayerContext';
+import { BandLink } from '../../components/BandLink';
 import { MemberRow } from '../../components/MemberRow';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { Link } from 'react-router-dom';
@@ -20,6 +21,13 @@ export function BandPage() {
     queryKey: ['band', maId],
     queryFn: () => getBand(Number(maId)),
     enabled: !!maId,
+  });
+
+  const { data: similarBands, isLoading: similarLoading } = useQuery({
+    queryKey: ['similar', maId],
+    queryFn: () => getSimilarBands(Number(maId)),
+    enabled: !!maId,
+    staleTime: 1000 * 60 * 60, // 1 hour — similar bands don't change
   });
 
   if (isLoading) return <LoadingSpinner message="Loading band data..." />;
@@ -128,6 +136,28 @@ export function BandPage() {
           )}
         </div>
       </div>
+
+      {similarLoading && <LoadingSpinner message="Finding similar bands..." />}
+      {similarBands && similarBands.length > 0 && (
+        <div className="similar-bands">
+          <h2 className="section-title">Sonically Similar Bands <span className="beta-badge">(beta)</span> <span className="info-hint" title="Recommendations powered by a contrastive ML model trained on AcousticBrainz audio features (BPM, energy, loudness, key, MFCC). Finds bands that sound alike, not just share a genre.">?</span></h2>
+          <div className="similar-bands-list">
+            {similarBands.map((sb) => (
+              <div key={sb.ma_id} className="similar-band-item">
+                <div className="similar-band-info">
+                  <BandLink bandId={sb.ma_id} bandName={sb.name} className="similar-band-name" />
+                  <span className="similar-band-genre">{sb.genre}</span>
+                  <span className="similar-band-country">{sb.country}</span>
+                </div>
+                <div className="similar-score">
+                  <div className="similar-score-bar" style={{ width: `${Math.round(sb.score * 100)}%` }} />
+                  <span className="similar-score-text">{Math.round(sb.score * 100)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
