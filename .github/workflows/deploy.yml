@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      heavyml_version:
+        description: 'heavyML release tag to load embeddings from (e.g., v2.0.0). Leave empty to skip.'
+        required: false
+        default: ''
 
 permissions: {}
 
@@ -144,6 +149,67 @@ jobs:
             docker compose -f docker-compose.prod.yml pull backend && \
             docker compose -f docker-compose.prod.yml up -d && \
             docker image prune -f --filter 'label=org.opencontainers.image.source'"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
+
+  # ------------------------------------------------------------------
+  # Manual: Load new heavyML embeddings into production pgvector
+  # Trigger via: Actions → Build and Deploy → Run workflow → enter version
+  # ------------------------------------------------------------------
+  load-embeddings:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.heavyml_version != ''
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VM_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${SSH_KEY}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${KNOWN_HOSTS}" >> ~/.ssh/known_hosts
+          echo 'SSH_OPTS=-o StrictHostKeyChecking=yes -o ConnectTimeout=10' >> "$GITHUB_ENV"
+
+      - name: Download embeddings from heavyML release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAVYML_VERSION: ${{ github.event.inputs.heavyml_version }}
+        run: |
+          gh release download "${HEAVYML_VERSION}" \
+            --repo ipurusho/heavyML \
+            --pattern "load_embeddings.sql" \
+            --dir /tmp
+          echo "Downloaded load_embeddings.sql from heavyML ${HEAVYML_VERSION}"
+          wc -l /tmp/load_embeddings.sql
+
+      - name: Load embeddings into production pgvector
+        env:
+          VM_USER: ${{ secrets.VM_USER }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+        run: |
+          SSH="ssh ${SSH_OPTS} -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
+          scp ${SSH_OPTS} -i ~/.ssh/deploy_key \
+            /tmp/load_embeddings.sql "${VM_USER}@${VM_HOST}:/tmp/load_embeddings.sql"
+          ${SSH} "cd ~/app && \
+            docker exec -i \$(docker compose -f docker-compose.prod.yml ps -q postgres) \
+              psql -U metaloreian -d metaloreian < /tmp/load_embeddings.sql && \
+            rm /tmp/load_embeddings.sql"
+          echo "Embeddings loaded successfully"
+
+      - name: Verify embeddings
+        env:
+          VM_USER: ${{ secrets.VM_USER }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+        run: |
+          SSH="ssh ${SSH_OPTS} -i ~/.ssh/deploy_key ${VM_USER}@${VM_HOST}"
+          ${SSH} "cd ~/app && \
+            docker exec \$(docker compose -f docker-compose.prod.yml ps -q postgres) \
+              psql -U metaloreian -d metaloreian -c 'SELECT count(*) FROM band_embeddings;'"
 
       - name: Cleanup SSH key
         if: always()
