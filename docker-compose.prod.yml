@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16.6-alpine3.21
+    image: pgvector/pgvector:0.8.0-pg16
     environment:
       POSTGRES_DB: metaloreian
       POSTGRES_USER: metaloreian

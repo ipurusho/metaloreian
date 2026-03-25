@@ -829,6 +829,119 @@
   background: var(--accent-hover);
 }
 
+.info-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  border: 1px solid var(--text-muted);
+  border-radius: 50%;
+  cursor: help;
+  vertical-align: middle;
+  margin-left: 4px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.info-hint:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.beta-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--warning);
+  border: 1px solid var(--warning);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Similar Bands */
+.similar-bands {
+  margin-top: 32px;
+  max-width: 1100px;
+}
+
+.similar-bands-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.similar-band-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.similar-band-item:hover {
+  background: var(--bg-hover);
+}
+
+.similar-band-info {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.similar-band-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.similar-band-name:hover {
+  color: var(--accent-hover);
+}
+
+.similar-band-genre {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.similar-band-country {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.similar-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 120px;
+}
+
+.similar-score-bar {
+  height: 4px;
+  background: var(--accent);
+  border-radius: 2px;
+  flex: 1;
+  box-shadow: 0 0 4px rgba(192, 57, 43, 0.4);
+}
+
+.similar-score-text {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
 /* Empty states */
 .empty-state {
   color: var(--text-muted);
@@ -863,6 +976,15 @@
 
   .band-content {
     grid-template-columns: 1fr;
+  }
+
+  .similar-band-info {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .similar-score {
+    width: 80px;
   }
 
   .album-header {

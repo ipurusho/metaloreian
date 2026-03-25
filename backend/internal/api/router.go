@@ -29,11 +29,13 @@ func NewRouter(cfg *config.Config, s *store.Store, bf BandFetcher, af AlbumFetch
 	spotifyH := NewSpotifyHandlers(cfg)
 	bandH := NewBandHandlers(s, bf)
 	albumH := NewAlbumHandlers(s, af)
+	similarH := NewSimilarHandlers(s)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(RateLimitMiddleware(60)) // 60 requests/minute per IP
 		r.Get("/bands/search", bandH.Search)
 		r.Get("/bands/{maId}", bandH.Get)
+		r.Get("/bands/{maId}/similar", similarH.Get)
 		r.Get("/albums/{albumId}", albumH.Get)
 		r.Post("/spotify/exchange", spotifyH.Exchange)
 		r.Post("/spotify/refresh", spotifyH.Refresh)

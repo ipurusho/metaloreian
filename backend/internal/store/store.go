@@ -264,6 +264,34 @@ func (s *Store) GetAlbumLineup(albumID int64) ([]models.Member, error) {
 	return members, rows.Err()
 }
 
+// GetSimilarBands returns bands with the most similar embeddings using pgvector cosine distance.
+// TODO: Integration test requires a real pgvector-enabled PostgreSQL instance.
+func (s *Store) GetSimilarBands(maID int64, limit int) ([]models.SimilarBand, error) {
+	rows, err := s.db.Query(`
+		SELECT be.band_id, COALESCE(b.name, be.band_name), COALESCE(b.genre, ''), COALESCE(b.country, ''),
+		       1 - (be.embedding <=> qe.embedding) AS score
+		FROM band_embeddings be
+		JOIN band_embeddings qe ON qe.band_id = $1
+		LEFT JOIN bands b ON b.ma_id = be.band_id
+		WHERE be.band_id != $1
+		ORDER BY be.embedding <=> qe.embedding
+		LIMIT $2`, maID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.SimilarBand
+	for rows.Next() {
+		var sb models.SimilarBand
+		if err := rows.Scan(&sb.MAID, &sb.Name, &sb.Genre, &sb.Country, &sb.Score); err != nil {
+			return nil, err
+		}
+		results = append(results, sb)
+	}
+	return results, rows.Err()
+}
+
 // SearchBandsByName performs a trigram search on band names.
 func (s *Store) SearchBandsByName(query string) ([]models.BandSearchResult, error) {
 	rows, err := s.db.Query(`
