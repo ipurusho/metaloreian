@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAlbum, spotifySearch, spotifyPlay } from '../../api/client';
+import { getAlbum, getSimilarAlbums, spotifySearch, spotifyPlay } from '../../api/client';
 import { useAuth } from '../../auth/AuthProvider';
 import { usePlayer } from '../../player/PlayerContext';
 import { MemberRow } from '../../components/MemberRow';
@@ -15,6 +15,13 @@ export function AlbumPage() {
     queryKey: ['album', albumId],
     queryFn: () => getAlbum(Number(albumId)),
     enabled: !!albumId,
+  });
+
+  const { data: similarAlbums, isLoading: similarLoading } = useQuery({
+    queryKey: ['similarAlbums', albumId],
+    queryFn: () => getSimilarAlbums(Number(albumId)),
+    enabled: !!albumId,
+    staleTime: 1000 * 60 * 60, // 1 hour — similar albums don't change
   });
 
   if (isLoading) return <LoadingSpinner message="Loading album data..." />;
@@ -105,6 +112,28 @@ export function AlbumPage() {
           )}
         </div>
       </div>
+
+      {similarLoading && <LoadingSpinner message="Finding similar albums..." />}
+      {similarAlbums && similarAlbums.length > 0 && (
+        <div className="similar-albums">
+          <h2 className="section-title">Similar Albums <span className="beta-badge">(beta)</span> <span className="info-hint" title="Recommendations powered by a contrastive ML model trained on AcousticBrainz audio features. Finds albums that sound alike based on BPM, energy, loudness, key, and MFCC.">?</span></h2>
+          <div className="similar-albums-list">
+            {similarAlbums.map((sa) => (
+              <div key={sa.album_id} className="similar-album-item">
+                <div className="similar-album-info">
+                  <span className="similar-album-name">{sa.name}</span>
+                  <span className="similar-album-band">{sa.band_name}</span>
+                  <span className="similar-album-type">{sa.type}</span>
+                </div>
+                <div className="similar-score">
+                  <div className="similar-score-bar" style={{ width: `${Math.round(sa.score * 100)}%` }} />
+                  <span className="similar-score-text">{Math.round(sa.score * 100)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

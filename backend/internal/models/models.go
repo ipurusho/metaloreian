@@ -72,3 +72,13 @@ type AlbumFull struct {
 	Tracks    []Track  `json:"tracks"`
 	Lineup    []Member `json:"lineup"`
 }
+
+type SimilarAlbum struct {
+	AlbumID  int64   `json:"album_id"`
+	Name     string  `json:"name"`
+	BandName string  `json:"band_name"`
+	Type     string  `json:"type"`
+	Year     string  `json:"year"`
+	CoverURL string  `json:"cover_url"`
+	Score    float64 `json:"score"`
+}

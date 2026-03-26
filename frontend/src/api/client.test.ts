@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { searchBands, getBand, getAlbum } from './client'
+import { searchBands, getBand, getAlbum, getSimilarAlbums } from './client'
 
 // Mock global fetch
 const mockFetch = vi.fn()
@@ -73,5 +73,26 @@ describe('getAlbum', () => {
     const data = await getAlbum(1234)
     expect(data).toEqual(album)
     expect(mockFetch.mock.calls[0][0]).toBe('/api/albums/1234')
+  })
+})
+
+describe('getSimilarAlbums', () => {
+  it('fetches similar albums by album ID', async () => {
+    const similar = [
+      { album_id: 100, name: 'Blackwater Park', band_name: 'Opeth', type: 'Full-length', year: '2001', cover_url: '', score: 0.95 },
+      { album_id: 200, name: 'Still Life', band_name: 'Opeth', type: 'Full-length', year: '1999', cover_url: '', score: 0.88 },
+    ]
+    mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(similar) })
+
+    const data = await getSimilarAlbums(42)
+    expect(data).toEqual(similar)
+    expect(mockFetch.mock.calls[0][0]).toBe('/api/albums/42/similar')
+  })
+
+  it('returns empty array when no similar albums', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
+
+    const data = await getSimilarAlbums(999)
+    expect(data).toEqual([])
   })
 })
